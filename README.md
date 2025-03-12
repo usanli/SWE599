@@ -1,5 +1,6 @@
-## **📖 SWE599 - Multi-Agent LLM Pipeline for Software Development**
-### **An AI-powered system for automating Django & Streamlit application development**
+# 🤖 SWE599 - Multi-Agent LLM Pipeline for Software Development
+
+> An AI-powered system for automating Django & Streamlit application development
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue.svg)
 ![Django](https://img.shields.io/badge/Django-4.2-green.svg)
@@ -8,74 +9,87 @@
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT-orange.svg)
 ![Multi-Agent](https://img.shields.io/badge/Multi--Agent-AI-yellow.svg)
 
----
+## 📋 Table of Contents
+- [About](#-about-this-project)
+- [Current Pipeline](#-current-pipeline-django--streamlit-multi-agent-developer)
+- [Tech Stack](#-tech-stack)
+- [Installation](#-installation)
+- [How It Works](#-how-it-works)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-## **📌 About This Repository**
-This repository is part of my **SWE599 capstone project**, which explores the use of **Multi-Agent LLM Pipelines** for software development.
+## 🔍 About This Project
 
-Currently, it contains a **single AI-powered pipeline:**
+This repository contains my **SWE599 capstone project**, which explores the use of **Multi-Agent LLM Pipelines** for automating software development tasks.
+
+Currently, the project features a single AI-powered pipeline:
+
 ### `multiagent_django_streamlit.py`
-💡 **An AI system that generates, tests, and debugs Django & Streamlit applications** using OpenAI's GPT models and LangChain.
+An intelligent system that generates, tests, and debugs Django & Streamlit applications using OpenAI's GPT models and LangChain.
 
-In the future, additional pipelines may be added to expand the system's capabilities.
+## 🚀 Current Pipeline: Django & Streamlit Multi-Agent Developer
 
----
+This pipeline helps developers **automate Django & Streamlit application creation** using a team of specialized AI agents:
 
-## **🚀 Current Working Pipeline: Django & Streamlit Multi-Agent Developer**
-### **📌 Overview**
-This pipeline helps developers **automate Django & Streamlit application creation** using AI.  
-It consists of **three AI agents**, each handling a different task:
+| Agent | Role |
+|-------|------|
+| **Code Generator** | Creates Django & Streamlit applications based on user requirements |
+| **Test Writer** | Develops pytest unit tests for the generated code |
+| **Debugger** | Identifies and resolves issues based on test results |
 
-1️⃣ **Code Generator** → Generates Django & Streamlit applications based on user input  
-2️⃣ **Test Writer** → Writes pytest unit tests for the generated code  
-3️⃣ **Debugger** → Finds and fixes issues based on test results  
+## 🛠️ Tech Stack
 
----
+- **Language:** Python 3.10
+- **Frameworks:** Django 4.2, Streamlit 1.12
+- **AI Integration:** OpenAI GPT models via LangChain
+- **Testing:** pytest
+- **Environment:** dotenv for configuration
 
-## **🛠 Tech Stack**
-- **Programming Language:** Python 🐍
-- **Frameworks:** Django, Streamlit
-- **AI Models:** OpenAI GPT (via LangChain)
-- **Libraries:** LangChain, OpenAI API, pytest, dotenv
+## 📥 Installation
 
----
+### Prerequisites
+- Python 3.10+
+- OpenAI API key
 
-## **📌 Installation**
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/your-username/SWE599-Multi-Agent-LLM-Pipeline.git
-cd SWE599-Multi-Agent-LLM-Pipeline
-```
+### Setup
 
-### 2️⃣ Set Up a Virtual Environment
-```bash
-python -m venv venv
-source venv/bin/activate   # On Windows, use: venv\Scripts\activate
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/SWE599-Multi-Agent-LLM-Pipeline.git
+   cd SWE599-Multi-Agent-LLM-Pipeline
+   ```
 
-### 3️⃣ Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+2. **Create a virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # On Windows: venv\Scripts\activate
+   ```
 
-### 4️⃣ Add Your OpenAI API Key
-Create a `.env` file and add:
-```bash
-OPENAI_API_KEY=your-api-key-here
-```
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 5️⃣ Run the Application
-```bash
-streamlit run multiagent_django_streamlit.py
-```
+4. **Configure your API key**
+   
+   Create a `.env` file in the project root:
+   ```
+   OPENAI_API_KEY=your-api-key-here
+   ```
 
----
+5. **Launch the application**
+   ```bash
+   streamlit run multiagent_django_streamlit.py
+   ```
 
-## **📌 How It Works**
-💬 **User Input:**  
-> `"Create a Streamlit app that visualizes a Django model."`
+## 💡 How It Works
 
-📌 **AI Output (Generated Code):**
+### Example Workflow
+
+**User Input:**
+> "Create a Streamlit app that visualizes a Django model."
+
+**Step 1: Code Generation**
 ```python
 import streamlit as st
 from django.db import models
@@ -98,7 +112,7 @@ if __name__ == '__main__':
     main()
 ```
 
-📌 **AI Output (Generated Test Code):**
+**Step 2: Test Generation**
 ```python
 import pytest
 from unittest.mock import MagicMock, patch
@@ -110,20 +124,19 @@ def test_book_model():
     assert book.author == "John Doe"
 ```
 
-📌 **AI Output (Debugged Code):**  
-The AI reviews the generated code and tests, then fixes any issues before finalizing the output.
+**Step 3: Debugging & Optimization**
+The system automatically identifies and fixes issues in the generated code before delivering the final solution.
 
----
+## 🤝 Contributing
 
-## 🤝 **Contributing**
-Pull requests are welcome!  
-1. Fork the repo 🍴  
-2. Create a new branch (`git checkout -b feature-branch`)  
-3. Commit your changes (`git commit -m "Added new feature"`)  
-4. Push to the branch (`git push origin feature-branch`)  
-5. Open a PR 🚀  
+Contributions are welcome! Here's how you can help:
 
----
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📜 **License**
+## 📄 License
+
 MIT License © 2025 **Umut Şanlı**
