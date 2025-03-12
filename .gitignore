@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+*.venv
+
+# Python cache
+*.log
+*.sqlite3
+db.sqlite3
+*.db
+*.pyo
+*.pyd
+*.pdb
+
+# Secret keys & environment variables
+.env
+*.secret
+
+# Django specific
+*.pyc
+local_settings.py
+media/
+staticfiles/
+node_modules/
+
+# Migrations (only ignore auto-generated migrations, not your own!)
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Streamlit specific
+.streamlit/
+
+# Logs and debugging files
+logs/
+debug.log
+*.swp
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
