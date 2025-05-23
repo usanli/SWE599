@@ -9,6 +9,7 @@ import time
 import re
 import subprocess
 import socket
+import requests
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -26,10 +27,13 @@ except ImportError:
 # Load environment variables
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY", "your_unsplash_key_here")
 
 # Debug: Check if API keys are loaded (without exposing them)
 if OPENAI_API_KEY:
     print(f"OpenAI API key loaded: {OPENAI_API_KEY[:8]}...")
+if UNSPLASH_ACCESS_KEY and UNSPLASH_ACCESS_KEY != "your_unsplash_key_here":
+    print(f"Unsplash API key loaded: {UNSPLASH_ACCESS_KEY[:8]}...")
 
 # Configure Streamlit page
 st.set_page_config(
@@ -284,117 +288,167 @@ class SpecAgent:
         return spec
 
 class CodeAgent:
-    """Generates initial HTML and CSS scaffolding using LLM"""
+    """Generates single HTML file with embedded CSS and JavaScript"""
     @staticmethod
     def generate_files(spec, workspace_path):
-        """Generate index.html and styles.css based on spec using LLM or templates"""
+        """Generate single index.html file with embedded CSS and JS"""
         
         if LLM_MODEL:
-            # Use LLM for intelligent code generation
-            html_content = CodeAgent.generate_html_with_llm(spec)
-            css_content = CodeAgent.generate_css_with_llm(spec)
+            # Use LLM for intelligent single-file generation
+            html_content = CodeAgent.generate_single_file_with_llm(spec)
         else:
             # Only use templates when NO LLM is available
             st.warning("⚠️ No LLM available - using basic templates. Add API keys for AI generation!")
-            html_content = CodeAgent.generate_html_template(spec)
-            css_content = CodeAgent.generate_css_template(spec)
+            html_content = CodeAgent.generate_single_file_template(spec)
         
-        # Write files
+        # Write single file
         with open(os.path.join(workspace_path, 'index.html'), 'w', encoding='utf-8') as f:
             f.write(html_content)
         
+        # Create a placeholder styles.css for backward compatibility (empty file)
         with open(os.path.join(workspace_path, 'styles.css'), 'w', encoding='utf-8') as f:
-            f.write(css_content)
+            f.write('/* All styles are embedded in index.html for better cohesion */')
     
     @staticmethod
-    def generate_html_with_llm(spec, retry_count=0):
-        """Generate truly custom HTML based on detailed specifications"""
+    def generate_single_file_with_llm(spec, retry_count=0):
+        """Generate Fortune 500-quality single HTML file with embedded CSS and JS"""
         if not LLM_MODEL:
             st.error("❌ No LLM available for HTML generation")
-            return CodeAgent.generate_html_template(spec)
+            return CodeAgent.generate_single_file_template(spec)
         
-        # Create detailed prompt based on comprehensive spec
+        # Fetch professional images for the business
+        with st.spinner("🖼️ Fetching professional images..."):
+            business_type = spec.get('purpose', 'business')
+            sections = spec.get('core_sections', [])
+            images = ImageService.get_business_images(business_type, sections, count=4)
+        
+        if images:
+            st.success(f"✅ Found {len(images)} professional images for {business_type}")
+        else:
+            st.info("ℹ️ Using placeholder images")
+        
+        # Create comprehensive prompt for professional single-file websites
         sections_list = ', '.join(spec.get('core_sections', ['Hero/Welcome', 'About Us', 'Contact']))
         features_list = ', '.join(spec.get('special_features', []))
         
-        prompt = f"""You are a professional web developer and copywriter creating a premium website. Create compelling, professional content that converts visitors.
+        # Prepare image information for the prompt
+        image_info = ""
+        if images:
+            hero_img = images[0]
+            image_info = f"""
+PROFESSIONAL IMAGES AVAILABLE:
+• Hero Background: {hero_img['url']} (Use as hero section background)
+• Gallery Images: {len(images)-1} additional professional images available
+• All images are high-quality, professional, and relevant to {business_type}
+• Use images strategically to enhance visual appeal and professionalism"""
+        
+        prompt = f"""You are a world-class web designer and developer creating a complete, professional website in a SINGLE HTML file. This will include embedded CSS and JavaScript for a cohesive, high-quality result.
 
-DETAILED BUSINESS REQUIREMENTS:
-Business Name: {spec.get('business_name', 'Business')}
-Industry: {spec.get('purpose', 'Business')}
-What They Do: {spec.get('industry_focus', 'Provide services')}
-Target Audience: {spec.get('target_audience', 'General customers')}
-Design Style: {spec.get('design_style', 'Modern & Minimalist')}
-Color Theme: {spec.get('color_scheme', 'Professional')}
+CLIENT BRIEF - PREMIUM {spec.get('business_name', 'Business')} WEBSITE:
 
-CONTENT STRATEGY:
-Key Messages: {spec.get('key_messages', 'Professional service')}
-Unique Selling Points: {spec.get('unique_selling_points', 'Quality and reliability')}
+BUSINESS CONTEXT:
+• Industry: {spec.get('purpose', 'Business')} 
+• Company: {spec.get('business_name', 'Business')}
+• Services: {spec.get('industry_focus', 'Professional services')}
+• Target Audience: {spec.get('target_audience', 'Enterprise decision makers')}
+• Design Style: {spec.get('design_style', 'Modern & Minimalist')}
+• Brand Colors: {spec.get('color_scheme', 'Professional')} palette
+• Primary Color: {spec.get('primary_color', '#3498db')}
 
-REQUIRED SECTIONS: {sections_list}
-SPECIAL FEATURES: {features_list if features_list else 'Basic functionality'}
+CONTENT REQUIREMENTS:
+• Key Messages: {spec.get('key_messages', 'Excellence and expertise')}
+• Unique Value: {spec.get('unique_selling_points', 'Industry-leading solutions')}
+• Required Sections: {sections_list}
+• Special Features: {features_list if features_list else 'Professional essentials'}
 
-PROFESSIONAL CONTENT REQUIREMENTS:
+{image_info}
 
-1. **COMPELLING COPY & MESSAGING**:
-   - Write powerful, benefit-focused headlines that grab attention
-   - Use industry-specific language that resonates with target audience
-   - Include social proof, credibility indicators, and trust signals
-   - Create compelling calls-to-action that drive conversions
-   - Write in active voice with strong, confident language
+SINGLE-FILE ARCHITECTURE REQUIREMENTS:
 
-2. **PROFESSIONAL STRUCTURE**:
-   - Modern semantic HTML5 with proper hierarchy
-   - Strategic use of headings (h1, h2, h3) for SEO and readability
-   - Well-organized sections with logical flow
-   - Professional navigation with descriptive labels
-   - Clean, semantic class names (hero-section, services-grid, etc.)
+**1. COMPLETE EMBEDDED DESIGN:**
+• All CSS embedded in <style> tags in the <head>
+• Optional JavaScript embedded in <script> tags
+• No external dependencies except Google Fonts (optional)
+• Self-contained, deployable anywhere
 
-3. **MODERN COMPONENTS**:
-   - Hero section with powerful headline and clear value proposition
-   - Professional services/features grid with benefits-focused descriptions
-   - Compelling about section that builds trust and credibility
-   - Contact section with multiple engagement options
-   - Modern button designs with action-oriented text
+**2. PROFESSIONAL VISUAL DESIGN WITH IMAGES:**
+• Use the hero background image for a stunning visual impact
+• Implement professional image galleries where appropriate
+• Ensure all images are responsive and optimized
+• Add subtle overlay effects and proper image styling
+• Professional color palette with sophisticated gradients
+• Modern typography (Inter, SF Pro, or web-safe alternatives)  
+• Perfect spacing and visual hierarchy with images
+• Subtle shadows, rounded corners, and premium effects
 
-4. **TRUST & CREDIBILITY ELEMENTS**:
-   - Include years of experience, certifications, or awards
-   - Add testimonial placeholders with realistic names and companies
-   - Show expertise through detailed service descriptions
-   - Include contact information that builds trust
-   - Add professional social proof indicators
+**3. ENTERPRISE-GRADE CONTENT:**
+• Compelling headlines that communicate value instantly
+• Industry-specific expertise and credibility signals
+• Professional contact information and trust indicators
+• Clear calls-to-action that drive business conversations
+• Social proof through testimonials and case studies
 
-5. **INDUSTRY-SPECIFIC EXCELLENCE**:
-   - Consulting: Focus on expertise, results, Fortune 500 clients
-   - Healthcare: Emphasize safety, certifications, patient care
-   - Technology: Highlight innovation, cutting-edge solutions
-   - Restaurant: Showcase atmosphere, quality ingredients, experience
-   - Creative: Display portfolio, unique approach, artistic vision
+**4. MODERN CSS ARCHITECTURE:**
+• CSS custom properties for consistent theming
+• Mobile-first responsive design with proper breakpoints
+• Smooth transitions and hover effects
+• Professional button styling with gradients/shadows
+• Modern card designs with subtle elevation
+• Clean navigation with proper accessibility
+• Responsive image handling and optimization
 
-6. **CONVERSION-FOCUSED DESIGN**:
-   - Clear primary and secondary calls-to-action
-   - Multiple contact methods (phone, email, form, chat)
-   - Easy navigation with logical user journey
-   - Mobile-first responsive structure
-   - Fast-loading, performance-optimized HTML
+**5. INTERACTIVE ELEMENTS (Optional JS):**
+• Smooth scrolling navigation
+• Mobile menu toggle functionality
+• Contact form validation
+• Subtle animations on scroll (if appropriate)
+• Professional micro-interactions
 
-CONTENT QUALITY STANDARDS:
-- Write like a professional copywriter for Fortune 500 companies
-- Every headline should be compelling and benefit-focused
-- Every section should have a clear purpose and value proposition
-- Use specific, concrete language instead of generic phrases
-- Make visitors think "This company knows what they're doing"
+**6. INDUSTRY-SPECIFIC EXCELLENCE:**
 
-TECHNICAL EXCELLENCE:
-- Perfect HTML5 semantic structure
-- Proper meta tags, title, and viewport
-- Link to "styles.css" for styling
-- Clean, professional class names
-- Accessibility-friendly markup
+For Consulting/SAP: Navy/blue gradients, trust badges, "Fortune 500 clients", enterprise credibility, ROI focus
+For Healthcare: Calming blues/greens, certifications, patient care focus, accessibility compliance
+For Technology: Modern gradients, innovation messaging, cutting-edge aesthetics, security emphasis  
+For Creative: Bold visual elements, portfolio showcases, artistic layouts, unique typography
+For Legal: Professional authority, credentials emphasis, trust building, conservative elegance
 
-Create a website that immediately conveys professionalism, expertise, and trustworthiness.
+**7. CONVERSION OPTIMIZATION:**
+• Clear value propositions throughout
+• Multiple contact methods (phone, email, form)
+• Strategic placement of credibility indicators
+• Professional testimonials with company names
+• Easy-to-find contact information
+• Mobile-optimized user experience
 
-Return ONLY the complete HTML5 document:"""
+QUALITY BENCHMARKS:
+Create a website that looks like it was designed for:
+• McKinsey & Company (consulting authority)
+• Stripe (clean, modern, professional)
+• Apple (premium design and typography)
+• Memorial Sloan Kettering (healthcare trust)
+• Cravath (legal prestige)
+
+The final result should make visitors immediately think: "This company is clearly the premium choice in their industry."
+
+TECHNICAL REQUIREMENTS:
+• Valid HTML5 semantic structure
+• Embedded CSS with modern techniques
+• Responsive design (mobile, tablet, desktop)
+• Accessibility compliance (WCAG 2.1 AA)
+• Fast loading with optimized code
+• Cross-browser compatibility
+• Professional image integration and responsive handling
+
+CRITICAL OUTPUT INSTRUCTIONS:
+- Return ONLY the complete HTML document
+- Start with <!DOCTYPE html> and end with </html>
+- Do NOT include any explanatory text before or after the HTML
+- Do NOT include markdown code blocks or formatting
+- Do NOT include feature lists or descriptions
+- The response should be pure, clean HTML code that can be used directly
+- Include the professional images using the URLs provided above
+
+Generate the complete HTML document now:"""
 
         try:
             response = LLM_MODEL.invoke(prompt)
@@ -402,146 +456,47 @@ Return ONLY the complete HTML5 document:"""
             
             # Clean and validate
             content = FeedbackAgent._clean_code_response(content, 'html')
+            
+            # If no images were embedded by LLM, add them manually
+            if images and 'background-image:' not in content:
+                image_html = ImageService.create_image_html(images, business_type)
+                # Insert before closing </head> tag
+                content = content.replace('</head>', f'{image_html}\n</head>')
+            
             if FeedbackAgent._validate_html(content):
-                st.success("✅ Custom HTML generated successfully!")
+                st.success("✅ Premium single-file website with professional images generated!")
                 return content
             else:
                 if retry_count < 2:
-                    st.warning(f"🔄 HTML validation failed, retrying... ({retry_count + 1}/3)")
-                    return CodeAgent.generate_html_with_llm(spec, retry_count + 1)
+                    st.warning(f"🔄 HTML validation failed, retrying with enhanced requirements... ({retry_count + 1}/3)")
+                    return CodeAgent.generate_single_file_with_llm(spec, retry_count + 1)
                 else:
                     st.error("❌ LLM failed to generate valid HTML after 3 attempts")
-                    return CodeAgent.generate_html_template(spec)
+                    return CodeAgent.generate_single_file_template(spec)
                     
         except Exception as e:
             if retry_count < 2:
-                st.warning(f"🔄 LLM error in HTML generation, retrying... ({retry_count + 1}/3): {str(e)[:100]}")
-                return CodeAgent.generate_html_with_llm(spec, retry_count + 1)
+                st.warning(f"🔄 LLM error in generation, retrying... ({retry_count + 1}/3): {str(e)[:100]}")
+                return CodeAgent.generate_single_file_with_llm(spec, retry_count + 1)
             else:
-                st.error(f"❌ LLM HTML generation failed after 3 attempts: {str(e)}")
-                return CodeAgent.generate_html_template(spec)
+                st.error(f"❌ LLM generation failed after 3 attempts: {str(e)}")
+                return CodeAgent.generate_single_file_template(spec)
     
     @staticmethod
-    def generate_css_with_llm(spec, retry_count=0):
-        """Generate truly custom CSS based on detailed specifications"""
-        if not LLM_MODEL:
-            st.error("❌ No LLM available for CSS generation")
-            return CodeAgent.generate_css_template(spec)
-        
-        prompt = f"""You are a world-class UI/UX designer from a top design agency (like Apple, Google, or Stripe). Create a stunning, professional website that looks premium and modern.
-
-BUSINESS CONTEXT:
-Industry: {spec.get('purpose', 'Business')} 
-Business Focus: {spec.get('industry_focus', 'Professional services')}
-Target Audience: {spec.get('target_audience', 'General customers')}
-Design Style: {spec.get('design_style', 'Modern & Minimalist')}
-Color Scheme: {spec.get('color_scheme', 'Professional')}
-Primary Color: {spec.get('primary_color', '#3498db')}
-
-DESIGN EXCELLENCE REQUIREMENTS:
-Create a website that looks like it was designed by Apple, Google, or Stripe's design team:
-
-1. **VISUAL HIERARCHY & TYPOGRAPHY**:
-   - Use premium font combinations (Inter, SF Pro, or similar)
-   - Perfect font sizing: h1(48-56px), h2(36-42px), h3(24-28px), body(16-18px)
-   - Proper line heights (1.4-1.6) and letter spacing
-   - Strong visual hierarchy with clear content organization
-
-2. **MODERN LAYOUT & SPACING**:
-   - Generous whitespace and perfect spacing ratios
-   - CSS Grid and Flexbox for professional layouts
-   - Maximum width containers (1200px) with proper margins
-   - Consistent spacing system (8px, 16px, 24px, 32px, 48px, 64px)
-
-3. **PREMIUM VISUAL ELEMENTS**:
-   - Subtle shadows: box-shadow: 0 4px 6px rgba(0,0,0,0.1)
-   - Modern gradients and depth
-   - Rounded corners (8px-16px) for modern feel
-   - High-quality hover effects and micro-interactions
-
-4. **PROFESSIONAL COLOR SYSTEM**:
-   - Build sophisticated color palette around primary color
-   - Use color psychology for the specific industry
-   - Proper contrast ratios (WCAG AA compliance)
-   - Subtle background variations and tonal differences
-
-5. **MODERN COMPONENTS**:
-   - Professional navigation with proper hover states
-   - Beautiful buttons with gradient/shadow effects
-   - Modern cards with subtle elevation
-   - Professional forms with floating labels or modern styling
-   - Hero sections with compelling visual impact
-
-6. **INDUSTRY-SPECIFIC EXCELLENCE**:
-   - Consulting/Corporate: Clean, trustworthy, premium feel
-   - Healthcare: Calming blues/greens, accessible, trustworthy
-   - Technology: Modern, innovative, cutting-edge aesthetics
-   - Creative: Bold, artistic, unique visual elements
-   - Restaurant: Warm, appetizing, inviting atmosphere
-
-7. **RESPONSIVE & MODERN**:
-   - Mobile-first responsive design
-   - Smooth animations and transitions
-   - Modern CSS techniques (CSS custom properties, clamp(), etc.)
-   - Perfect on all device sizes
-
-INSPIRATION LEVEL: Make this look like websites from:
-- Apple.com (clean, premium, perfect spacing)
-- Stripe.com (professional, modern, excellent typography)
-- Linear.app (beautiful gradients, modern design)
-- Vercel.com (clean, developer-focused, professional)
-- Framer.com (creative, modern, visually stunning)
-
-Return CSS that creates a website people will say "Wow, this looks professional!" when they see it.
-
-Return ONLY the complete, professional CSS code:"""
-
-        try:
-            response = LLM_MODEL.invoke(prompt)
-            content = response.content if hasattr(response, 'content') else str(response)
-            
-            # Clean and validate
-            content = FeedbackAgent._clean_code_response(content, 'css')
-            if FeedbackAgent._validate_css(content):
-                st.success("✅ Custom CSS generated successfully!")
-                return content
-            else:
-                if retry_count < 2:
-                    st.warning(f"🔄 CSS validation failed, retrying... ({retry_count + 1}/3)")
-                    return CodeAgent.generate_css_with_llm(spec, retry_count + 1)
-                else:
-                    st.error("❌ LLM failed to generate valid CSS after 3 attempts")
-                    return CodeAgent.generate_css_template(spec)
-                    
-        except Exception as e:
-            if retry_count < 2:
-                st.warning(f"🔄 LLM error in CSS generation, retrying... ({retry_count + 1}/3): {str(e)[:100]}")
-                return CodeAgent.generate_css_with_llm(spec, retry_count + 1)
-            else:
-                st.error(f"❌ LLM CSS generation failed after 3 attempts: {str(e)}")
-                return CodeAgent.generate_css_template(spec)
-    
-    @staticmethod
-    def generate_html_template(spec):
-        """Template-based HTML generation (fallback)"""
-        nav_html = ""
-        if spec['needs_nav']:
-            nav_items = ['Home', 'About', 'Services', 'Contact']
-            nav_links = ''.join([f'<a href="#{item.lower()}">{item}</a>' for item in nav_items])
-            nav_html = f"""
-        <nav class="navbar">
-            {nav_links}
-        </nav>"""
+    def generate_single_file_template(spec):
+        """Generate single HTML file template (fallback)"""
+        nav_items = ['Home', 'About', 'Services', 'Contact']
+        nav_links = ''.join([f'<a href="#{item.lower()}" class="nav-link">{item}</a>' for item in nav_items])
         
         sections_html = ""
-        for section in spec['sections']:
-            section_id = section.replace(' ', '-').lower()
+        for section in spec.get('core_sections', ['Hero/Welcome', 'About Us', 'Contact']):
+            section_id = section.replace(' ', '-').replace('/', '-').lower()
             sections_html += f"""
         <section id="{section_id}" class="section">
             <div class="container">
-                <h2>{section.title()}</h2>
-                <p>This is the {section} section. Content will be added here.</p>
-                {CodeAgent.get_section_content(section)}
+                <h2>{section}</h2>
+                <p>This is the {section} section. Professional content will be added here.</p>
+                {CodeAgent.get_section_content_template(section)}
             </div>
         </section>"""
         
@@ -550,430 +505,175 @@ Return ONLY the complete, professional CSS code:"""
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{spec['site_title']}</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>{spec.get('business_name', 'My Business')} | Professional Services</title>
+    <style>
+        /* Modern CSS Variables */
+        :root {{
+            --primary-color: {spec.get('primary_color', '#3498db')};
+            --primary-dark: #2980b9;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --text-color: #2c3e50;
+            --text-light: #7f8c8d;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --border: #e1e8ed;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --border-radius: 8px;
+            --spacing: 2rem;
+        }}
+        
+        /* Modern Reset */
+        *, *::before, *::after {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--background);
+        }}
+        
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing);
+        }}
+        
+        /* Header */
+        .header {{
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: var(--spacing) 0;
+            text-align: center;
+        }}
+        
+        .header h1 {{
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }}
+        
+        /* Navigation */
+        .navbar {{
+            background: var(--secondary-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }}
+        
+        .nav-link {{
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            border-radius: var(--border-radius);
+            transition: background 0.3s ease;
+        }}
+        
+        .nav-link:hover {{
+            background: rgba(255,255,255,0.1);
+        }}
+        
+        /* Sections */
+        .section {{
+            padding: var(--spacing) 0;
+        }}
+        
+        .section:nth-child(even) {{
+            background: var(--surface);
+        }}
+        
+        .section h2 {{
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }}
+        
+        /* Responsive */
+        @media (max-width: 768px) {{
+            .header h1 {{ font-size: 2rem; }}
+            .section h2 {{ font-size: 2rem; }}
+            .container {{ padding: 0 1rem; }}
+        }}
+    </style>
 </head>
 <body>
     <header class="header">
         <div class="container">
-            <h1>{spec['site_title']}</h1>
+            <h1>{spec.get('business_name', 'My Business')}</h1>
+            <p>Professional {spec.get('purpose', 'Business')} Services</p>
         </div>
-    </header>{nav_html}{sections_html}
+    </header>
+    
+    <nav class="navbar">
+        <div class="container">
+            {nav_links}
+        </div>
+    </nav>
+    
+    <main>
+        {sections_html}
+    </main>
+    
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('.nav-link').forEach(link => {{
+            link.addEventListener('click', function(e) {{
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {{
+                    target.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                }}
+            }});
+        }});
+    </script>
 </body>
 </html>"""
     
     @staticmethod
-    def get_section_content(section):
+    def get_section_content_template(section):
         """Generate specific content for different sections"""
-        if section == 'contact form':
+        if 'contact' in section.lower():
             return """
-                <form class="contact-form">
-                    <input type="text" placeholder="Your Name" required>
-                    <input type="email" placeholder="Your Email" required>
-                    <textarea placeholder="Your Message" rows="4" required></textarea>
-                    <button type="submit">Send Message</button>
-                </form>"""
-        elif section == 'features':
-            return """
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <h3>Feature 1</h3>
-                        <p>Description of feature 1</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>Feature 2</h3>
-                        <p>Description of feature 2</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>Feature 3</h3>
-                        <p>Description of feature 3</p>
-                    </div>
+                <div style="max-width: 600px; margin: 2rem auto;">
+                    <form style="background: white; padding: 2rem; border-radius: 8px; box-shadow: var(--shadow);">
+                        <input type="text" placeholder="Your Name" style="width: 100%; padding: 1rem; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: 4px;" required>
+                        <input type="email" placeholder="Your Email" style="width: 100%; padding: 1rem; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: 4px;" required>
+                        <textarea placeholder="Your Message" rows="4" style="width: 100%; padding: 1rem; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: 4px;" required></textarea>
+                        <button type="submit" style="background: var(--primary-color); color: white; padding: 1rem 2rem; border: none; border-radius: 4px; cursor: pointer;">Send Message</button>
+                    </form>
                 </div>"""
-        elif section == 'hero':
+        elif 'services' in section.lower() or 'products' in section.lower():
             return """
-                <div class="hero-content">
-                    <h2>Welcome to Our Amazing Website</h2>
-                    <p>This is a hero section with compelling content.</p>
-                    <button class="cta-button">Get Started</button>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: var(--shadow);">
+                        <h3>Professional Service 1</h3>
+                        <p>Comprehensive solutions tailored to your business needs.</p>
+                    </div>
+                    <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: var(--shadow);">
+                        <h3>Expert Consultation</h3>
+                        <p>Strategic guidance from industry professionals.</p>
+                    </div>
+                    <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: var(--shadow);">
+                        <h3>Ongoing Support</h3>
+                        <p>Dedicated support to ensure your continued success.</p>
+                    </div>
                 </div>"""
         else:
             return ""
-    
-    @staticmethod
-    def generate_css_template(spec):
-        """Template-based CSS generation (fallback)"""
-        return f"""/* Modern CSS Variables */
-:root {{
-    --primary-color: {spec['primary_color']};
-    --primary-light: {spec['primary_color']}20;
-    --primary-dark: color-mix(in srgb, {spec['primary_color']} 80%, black);
-    --secondary-color: #2c3e50;
-    --accent-color: #e74c3c;
-    --text-color: #2c3e50;
-    --text-light: #7f8c8d;
-    --background-color: #ffffff;
-    --surface-color: #f8fafc;
-    --border-color: #e1e8ed;
-    --shadow-light: 0 2px 10px rgba(0,0,0,0.08);
-    --shadow-medium: 0 4px 20px rgba(0,0,0,0.12);
-    --shadow-heavy: 0 8px 30px rgba(0,0,0,0.15);
-    --border-radius: 12px;
-    --border-radius-sm: 8px;
-    --spacing-xs: 0.5rem;
-    --spacing-sm: 1rem;
-    --spacing-md: 1.5rem;
-    --spacing-lg: 2rem;
-    --spacing-xl: 3rem;
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-heading: 'Poppins', var(--font-primary);
-}}
-
-/* Modern Reset and Base Styles */
-*, *::before, *::after {{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}}
-
-body {{
-    font-family: var(--font-primary);
-    line-height: 1.7;
-    color: var(--text-color);
-    background: linear-gradient(135deg, var(--surface-color) 0%, #ffffff 100%);
-    min-height: 100vh;
-    font-size: 16px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}}
-
-.container {{
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--spacing-md);
-}}
-
-/* Typography */
-h1, h2, h3, h4, h5, h6 {{
-    font-family: var(--font-heading);
-    font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: var(--spacing-sm);
-    color: var(--text-color);
-}}
-
-h1 {{ font-size: 3.5rem; }}
-h2 {{ font-size: 2.75rem; }}
-h3 {{ font-size: 2rem; }}
-
-p {{
-    margin-bottom: var(--spacing-sm);
-    color: var(--text-light);
-    font-size: 1.1rem;
-}}
-
-/* Modern Header */
-.header {{
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
-    padding: var(--spacing-lg) 0;
-    box-shadow: var(--shadow-medium);
-    position: relative;
-    overflow: hidden;
-}}
-
-.header::before {{
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
-    pointer-events: none;
-}}
-
-.header h1 {{
-    font-size: 3.5rem;
-    text-align: center;
-    font-weight: 800;
-    margin: 0;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    letter-spacing: -0.02em;
-}}
-
-/* Modern Navigation */
-.navbar {{
-    background: rgba(255,255,255,0.98);
-    backdrop-filter: blur(10px);
-    padding: var(--spacing-sm) 0;
-    box-shadow: var(--shadow-light);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 1px solid var(--border-color);
-}}
-
-.navbar a {{
-    color: var(--text-color);
-    text-decoration: none;
-    padding: var(--spacing-xs) var(--spacing-md);
-    margin: 0 var(--spacing-xs);
-    border-radius: var(--border-radius-sm);
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    display: inline-block;
-}}
-
-.navbar a:hover {{
-    background: var(--primary-light);
-    color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-light);
-}}
-
-/* Modern Sections */
-.section {{
-    padding: var(--spacing-xl) 0;
-    position: relative;
-}}
-
-.section:nth-child(even) {{
-    background: var(--surface-color);
-}}
-
-.section h2 {{
-    color: var(--text-color);
-    margin-bottom: var(--spacing-md);
-    font-size: 2.75rem;
-    text-align: center;
-    position: relative;
-}}
-
-.section h2::after {{
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-    border-radius: 2px;
-}}
-
-/* Hero Section */
-.hero-content {{
-    text-align: center;
-    padding: var(--spacing-xl) 0;
-    max-width: 800px;
-    margin: 0 auto;
-}}
-
-.hero-content h2 {{
-    font-size: 3.5rem;
-    margin-bottom: var(--spacing-md);
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}}
-
-.hero-content p {{
-    font-size: 1.3rem;
-    margin-bottom: var(--spacing-lg);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}}
-
-.cta-button {{
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
-    padding: var(--spacing-sm) var(--spacing-xl);
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 1.2rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-medium);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    position: relative;
-    overflow: hidden;
-}}
-
-.cta-button:hover {{
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-heavy);
-}}
-
-.cta-button:active {{
-    transform: translateY(-1px);
-}}
-
-/* Modern Features Grid */
-.features-grid {{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: var(--spacing-lg);
-    margin-top: var(--spacing-xl);
-}}
-
-.feature-card {{
-    background: white;
-    padding: var(--spacing-xl);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
-    text-align: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid var(--border-color);
-    position: relative;
-    overflow: hidden;
-}}
-
-.feature-card::before {{
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-}}
-
-.feature-card:hover {{
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-heavy);
-    border-color: var(--primary-color);
-}}
-
-.feature-card h3 {{
-    color: var(--text-color);
-    margin-bottom: var(--spacing-sm);
-    font-size: 1.5rem;
-}}
-
-.feature-card p {{
-    color: var(--text-light);
-    line-height: 1.6;
-}}
-
-/* Modern Contact Form */
-.contact-form {{
-    max-width: 600px;
-    margin: var(--spacing-xl) auto;
-    background: white;
-    padding: var(--spacing-xl);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-medium);
-    border: 1px solid var(--border-color);
-}}
-
-.contact-form input,
-.contact-form textarea {{
-    width: 100%;
-    padding: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    font-size: 1rem;
-    font-family: var(--font-primary);
-    transition: all 0.3s ease;
-    background: white;
-}}
-
-.contact-form input:focus,
-.contact-form textarea:focus {{
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-light);
-    transform: translateY(-1px);
-}}
-
-.contact-form button {{
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
-    padding: var(--spacing-sm) var(--spacing-xl);
-    border: none;
-    border-radius: var(--border-radius-sm);
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 100%;
-    box-shadow: var(--shadow-medium);
-}}
-
-.contact-form button:hover {{
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-heavy);
-}}
-
-/* Responsive Design */
-@media (max-width: 768px) {{
-    .header h1 {{
-        font-size: 2.5rem;
-    }}
-    
-    .hero-content h2 {{
-        font-size: 2.5rem;
-    }}
-    
-    .section h2 {{
-        font-size: 2rem;
-    }}
-    
-    .features-grid {{
-        grid-template-columns: 1fr;
-        gap: var(--spacing-md);
-    }}
-    
-    .container {{
-        padding: 0 var(--spacing-sm);
-    }}
-    
-    .navbar a {{
-        display: block;
-        margin: var(--spacing-xs) 0;
-        text-align: center;
-    }}
-}}
-
-/* Loading Animations */
-@keyframes fadeInUp {{
-    from {{
-        opacity: 0;
-        transform: translateY(30px);
-    }}
-    to {{
-        opacity: 1;
-        transform: translateY(0);
-    }}
-}}
-
-.feature-card {{
-    animation: fadeInUp 0.6s ease-out;
-}}
-
-.feature-card:nth-child(2) {{
-    animation-delay: 0.1s;
-}}
-
-.feature-card:nth-child(3) {{
-    animation-delay: 0.2s;
-}}"""
 
 class FeedbackAgent:
     """Handles stateful, incremental website updates with memory and context awareness"""
     @staticmethod
     def parse_and_apply_feedback(feedback, workspace_path):
-        """Parse user feedback with full context memory and apply incremental changes"""
+        """Parse user feedback and apply changes to the single HTML file"""
         try:
             if not LLM_MODEL:
-                return FeedbackAgent._fallback_regex_parsing(feedback, workspace_path)
+                return FeedbackAgent._fallback_single_file_parsing(feedback, workspace_path)
             
             # Update conversation memory
             FeedbackAgent._update_conversation_memory(feedback)
@@ -981,38 +681,23 @@ class FeedbackAgent:
             # Analyze feedback in context of previous changes
             change_analysis = FeedbackAgent._analyze_incremental_change(feedback)
             
-            # Read current files
+            # Read current single HTML file
             html_path = os.path.join(workspace_path, 'index.html')
-            css_path = os.path.join(workspace_path, 'styles.css')
             
             with open(html_path, 'r', encoding='utf-8') as f:
                 current_html = f.read()
-            with open(css_path, 'r', encoding='utf-8') as f:
-                current_css = f.read()
             
-            # Apply incremental changes based on analysis
-            new_html = current_html
-            new_css = current_css
+            # Apply changes to the single file
+            new_html = FeedbackAgent._apply_single_file_changes(
+                feedback, current_html, change_analysis
+            )
             
-            if change_analysis['needs_html_update']:
-                new_html = FeedbackAgent._apply_incremental_html_changes(
-                    feedback, current_html, change_analysis
-                )
-                if not new_html:
-                    new_html = current_html
+            if not new_html:
+                new_html = current_html
             
-            if change_analysis['needs_css_update']:
-                new_css = FeedbackAgent._apply_incremental_css_changes(
-                    feedback, new_html, current_css, change_analysis
-                )
-                if not new_css:
-                    new_css = current_css
-            
-            # Write updated files
+            # Write updated file
             with open(html_path, 'w', encoding='utf-8') as f:
                 f.write(new_html)
-            with open(css_path, 'w', encoding='utf-8') as f:
-                f.write(new_css)
             
             # Update website context and memory
             FeedbackAgent._update_website_context(feedback, change_analysis)
@@ -1020,19 +705,164 @@ class FeedbackAgent:
             # Log the change for future reference
             FeedbackAgent._log_incremental_change(feedback, change_analysis)
             
-            changes_made = []
             if new_html != current_html:
-                changes_made.append("content")
-            if new_css != current_css:
-                changes_made.append("styling")
-            
-            if changes_made:
-                return True, f"✅ Incrementally updated {' and '.join(changes_made)}: '{feedback}'"
+                return True, f"✅ Single-file website updated: '{feedback}'"
             else:
                 return False, f"⚠️ No changes needed. Current state already matches your request."
             
         except Exception as e:
-            return False, f"❌ Error applying incremental changes: {str(e)}"
+            return False, f"❌ Error applying changes to single file: {str(e)}"
+    
+    @staticmethod
+    def _apply_single_file_changes(feedback, current_html, analysis):
+        """Apply changes to the single HTML file using enhanced LLM prompts"""
+        if not LLM_MODEL:
+            return None
+        
+        context = st.session_state.website_context
+        
+        # Create enhanced prompt for single-file modifications
+        enhanced_prompt = FeedbackAgent._create_single_file_prompt(
+            feedback, context, analysis, current_html
+        )
+        
+        if not enhanced_prompt:
+            st.warning("⚠️ Failed to create enhanced prompt")
+            return None
+        
+        try:
+            response = LLM_MODEL.invoke(enhanced_prompt)
+            content = response.content if hasattr(response, 'content') else str(response)
+            
+            # Clean and validate
+            content = FeedbackAgent._clean_code_response(content, 'html')
+            
+            if FeedbackAgent._validate_html(content):
+                change_ratio = FeedbackAgent._calculate_change_ratio(current_html, content)
+                
+                if change_ratio > 0.6:  # More than 60% changed = too much for single file
+                    st.warning("⚠️ Change too extensive, keeping current version to preserve functionality")
+                    return None
+                elif change_ratio > 0:
+                    st.success(f"✅ Single-file website updated ({change_ratio:.1%} changed)")
+                    return content
+                else:
+                    return None
+            else:
+                st.warning("⚠️ HTML validation failed, keeping current version")
+                return None
+                
+        except Exception as e:
+            st.error(f"❌ Single-file update error: {str(e)[:100]}")
+            return None
+    
+    @staticmethod
+    def _create_single_file_prompt(feedback, context, analysis, current_html):
+        """Create enhanced prompt for single-file website modifications"""
+        if not LLM_MODEL:
+            return None
+        
+        prompt = f"""You are a professional web developer updating a single HTML file (with embedded CSS and JavaScript) based on user feedback.
+
+USER FEEDBACK: "{feedback}"
+
+CURRENT WEBSITE CONTEXT:
+- Business Type: {context['business_type']} ({context['current_theme']})
+- Key Features: {', '.join(context['key_features']) if context['key_features'] else 'basic structure'}
+- Style Preferences: {context.get('style_preferences', {})}
+- Change Type: {analysis.get('change_type', 'incremental')}
+- Change Scope: {analysis.get('scope', 'medium')}
+
+SINGLE-FILE MODIFICATION INSTRUCTIONS:
+
+**1. UNDERSTAND THE REQUEST:**
+- Interpret the user's intent and desired outcome
+- Identify specific elements that need modification
+- Determine if this requires HTML structure, CSS styling, or JavaScript changes
+
+**2. TARGETED MODIFICATIONS:**
+- Make MINIMAL, focused changes to achieve the request
+- Preserve all existing functionality and working elements
+- Maintain the embedded CSS and JavaScript structure
+- Keep the professional quality and visual consistency
+
+**3. SINGLE-FILE BEST PRACTICES:**
+- All styles remain embedded in the <style> section
+- All scripts remain embedded in the <script> section  
+- Maintain clean, organized code structure
+- Preserve responsive design and accessibility
+
+**4. QUALITY STANDARDS:**
+- Keep the professional, enterprise-grade appearance
+- Maintain modern design principles and visual hierarchy
+- Ensure cross-browser compatibility and performance
+- Preserve mobile responsiveness
+
+**5. CHANGE SAFETY:**
+- Don't break existing navigation or functionality
+- Maintain form submissions and interactive elements
+- Keep the overall design cohesion and brand consistency
+- Test that all sections remain accessible
+
+CURRENT SINGLE HTML FILE:
+{current_html}
+
+TASK: Apply the requested changes while maintaining the single-file architecture and professional quality.
+
+CRITICAL OUTPUT INSTRUCTIONS:
+- Return ONLY the complete, updated HTML document
+- Start with <!DOCTYPE html> and end with </html>
+- Do NOT include any explanatory text before or after the HTML
+- Do NOT include markdown code blocks or formatting
+- Do NOT include feature lists or descriptions
+- The response should be pure, clean HTML code that can be used directly
+
+Return the complete, updated HTML file now:"""
+
+        try:
+            return prompt.strip()
+        except Exception as e:
+            st.error(f"❌ Single-file prompt creation error: {str(e)[:100]}")
+            return None
+    
+    @staticmethod
+    def _fallback_single_file_parsing(feedback, workspace_path):
+        """Fallback single-file parsing when no LLM is available"""
+        try:
+            html_path = os.path.join(workspace_path, 'index.html')
+            
+            with open(html_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            
+            feedback_lower = feedback.lower()
+            changes_made = False
+            
+            # Basic single-file modifications
+            if 'blue' in feedback_lower and ('header' in feedback_lower or 'background' in feedback_lower):
+                html_content = html_content.replace('--primary-color: #3498db', '--primary-color: #007bff')
+                changes_made = True
+            elif 'red' in feedback_lower and ('header' in feedback_lower or 'background' in feedback_lower):
+                html_content = html_content.replace('--primary-color: #3498db', '--primary-color: #dc3545')
+                changes_made = True
+            elif 'green' in feedback_lower and ('header' in feedback_lower or 'background' in feedback_lower):
+                html_content = html_content.replace('--primary-color: #3498db', '--primary-color: #28a745')
+                changes_made = True
+            elif 'bigger' in feedback_lower and 'text' in feedback_lower:
+                html_content = html_content.replace('font-size: 3rem', 'font-size: 4rem')
+                html_content = html_content.replace('font-size: 2.5rem', 'font-size: 3rem')
+                changes_made = True
+            
+            # Write updated file
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            if changes_made:
+                return True, "✅ Applied basic changes to single file using fallback parsing"
+            else:
+                return False, "⚠️ No patterns matched. Try: 'make header blue', 'bigger text'"
+            
+        except Exception as e:
+            return False, f"❌ Error in single-file fallback parsing: {str(e)}"
     
     @staticmethod
     def _update_conversation_memory(feedback):
@@ -1050,308 +880,14 @@ class FeedbackAgent:
     
     @staticmethod
     def _analyze_incremental_change(feedback):
-        """Analyze what type of incremental change is needed based on context and history"""
-        if not LLM_MODEL:
-            return {'type': 'simple', 'needs_html_update': False, 'needs_css_update': True}
-        
-        # Create context summary for analysis
-        context = st.session_state.website_context
-        recent_changes = st.session_state.incremental_changes[-3:] if st.session_state.incremental_changes else []
-        conversation_summary = FeedbackAgent._get_conversation_summary()
-        
-        prompt = f"""You are analyzing user feedback for incremental website development. 
-
-CURRENT WEBSITE CONTEXT:
-- Business Type: {context['business_type']}
-- Theme: {context['current_theme']}
-- Key Features: {', '.join(context['key_features']) if context['key_features'] else 'basic structure'}
-- Content Focus: {context['content_focus']}
-
-RECENT CONVERSATION:
-{conversation_summary}
-
-RECENT CHANGES MADE:
-{chr(10).join([f"- {change['description']}" for change in recent_changes]) if recent_changes else "No recent changes"}
-
-NEW USER FEEDBACK: "{feedback}"
-
-TASK: Analyze what type of incremental change is needed. Consider:
-1. Is this building on previous requests or changing direction?
-2. What specifically needs to be updated?
-3. Should this be a small tweak or larger update?
-
-Respond in this exact JSON format:
-{{
-    "change_type": "incremental|major|redirect",
-    "needs_html_update": true|false,
-    "needs_css_update": true|false,
-    "priority_areas": ["content", "structure", "styling", "features"],
-    "building_on_previous": true|false,
-    "scope": "small|medium|large",
-    "intent": "brief description of user intent"
-}}"""
-
-        try:
-            response = LLM_MODEL.invoke(prompt)
-            content = response.content if hasattr(response, 'content') else str(response)
-            
-            # Try to parse JSON response
-            import json
-            try:
-                analysis = json.loads(content.strip())
-                return analysis
-            except:
-                # Fallback if JSON parsing fails
-                return {
-                    'change_type': 'incremental',
-                    'needs_html_update': 'content' in feedback.lower() or 'add' in feedback.lower(),
-                    'needs_css_update': True,
-                    'priority_areas': ['styling'],
-                    'building_on_previous': True,
-                    'scope': 'medium',
-                    'intent': feedback[:100]
-                }
-                
-        except Exception as e:
-            st.warning(f"Analysis error, using fallback: {str(e)[:50]}")
-            return {
-                'change_type': 'incremental',
-                'needs_html_update': True,
-                'needs_css_update': True,
-                'priority_areas': ['content', 'styling'],
-                'building_on_previous': False,
-                'scope': 'medium',
-                'intent': feedback
-            }
-    
-    @staticmethod
-    def _get_conversation_summary():
-        """Get a summary of recent conversation for context"""
-        if not st.session_state.conversation_memory:
-            return "No previous conversation"
-        
-        recent = st.session_state.conversation_memory[-5:]
-        summary = []
-        for item in recent:
-            if item['type'] == 'user_feedback':
-                summary.append(f"User: {item['content'][:80]}...")
-        
-        return '\n'.join(summary[-3:]) if summary else "No recent conversation"
-    
-    @staticmethod
-    def _apply_incremental_html_changes(feedback, current_html, analysis):
-        """Apply surgical HTML changes using two-stage LLM pipeline"""
-        if not LLM_MODEL:
-            return None
-        
-        context = st.session_state.website_context
-        conversation_summary = FeedbackAgent._get_conversation_summary()
-        preserved_elements = FeedbackAgent._extract_preserved_elements(current_html)
-        
-        # STAGE 1: Create enhanced prompt using Prompt Engineering LLM
-        enhanced_prompt = FeedbackAgent._create_enhanced_coding_prompt(
-            feedback, context, analysis, preserved_elements, current_html, 'html'
-        )
-        
-        if not enhanced_prompt:
-            st.warning("⚠️ Failed to create enhanced prompt, using fallback")
-            return None
-        
-        # STAGE 2: Generate code using the enhanced prompt
-        try:
-            response = LLM_MODEL.invoke(enhanced_prompt)
-            content = response.content if hasattr(response, 'content') else str(response)
-            
-            # Clean and validate
-            content = FeedbackAgent._clean_code_response(content, 'html')
-            
-            if FeedbackAgent._validate_html(content):
-                change_ratio = FeedbackAgent._calculate_change_ratio(current_html, content)
-                
-                if change_ratio > 0.7:
-                    st.warning("⚠️ Change too extensive, keeping current version to preserve functionality")
-                    return None
-                elif change_ratio > 0:
-                    st.success(f"✅ Enhanced two-stage HTML edit applied ({change_ratio:.1%} changed)")
-                    return content
-                else:
-                    return None
-            else:
-                st.warning("⚠️ HTML validation failed, keeping current version")
-                return None
-                
-        except Exception as e:
-            st.error(f"❌ Enhanced HTML generation error: {str(e)[:100]}")
-            return None
-    
-    @staticmethod
-    def _apply_incremental_css_changes(feedback, html_content, current_css, analysis):
-        """Apply surgical CSS changes using two-stage LLM pipeline"""
-        if not LLM_MODEL:
-            return None
-        
-        context = st.session_state.website_context
-        preserved_rules = FeedbackAgent._extract_preserved_css_rules(current_css)
-        
-        # STAGE 1: Create enhanced prompt using Prompt Engineering LLM
-        enhanced_prompt = FeedbackAgent._create_enhanced_coding_prompt(
-            feedback, context, analysis, preserved_rules, current_css, 'css'
-        )
-        
-        if not enhanced_prompt:
-            st.warning("⚠️ Failed to create enhanced CSS prompt, using fallback")
-            return None
-        
-        # STAGE 2: Generate code using the enhanced prompt
-        try:
-            response = LLM_MODEL.invoke(enhanced_prompt)
-            content = response.content if hasattr(response, 'content') else str(response)
-            
-            # Clean and validate
-            content = FeedbackAgent._clean_code_response(content, 'css')
-            
-            if FeedbackAgent._validate_css(content):
-                change_ratio = FeedbackAgent._calculate_change_ratio(current_css, content)
-                
-                if change_ratio > 0.5:
-                    st.warning("⚠️ CSS change too extensive, keeping current version")
-                    return None
-                elif change_ratio > 0:
-                    st.success(f"✅ Enhanced two-stage CSS edit applied ({change_ratio:.1%} changed)")
-                    return content
-                else:
-                    return None
-            else:
-                st.warning("⚠️ CSS validation failed, keeping current version")
-                return None
-                
-        except Exception as e:
-            st.error(f"❌ Enhanced CSS generation error: {str(e)[:100]}")
-            return None
-    
-    @staticmethod
-    def _create_enhanced_coding_prompt(feedback, context, analysis, preserved_elements, current_code, code_type):
-        """Stage 1: Create enhanced, detailed coding prompt from user feedback"""
-        if not LLM_MODEL:
-            return None
-        
-        prompt_engineering_request = f"""You are a senior technical product manager and prompt engineer. Your job is to translate user feedback into precise, actionable prompts for developers.
-
-USER FEEDBACK: "{feedback}"
-
-CURRENT SYSTEM CONTEXT:
-- Business Type: {context['business_type']} ({context['current_theme']})
-- Key Features: {', '.join(context['key_features']) if context['key_features'] else 'basic structure'}
-- Style Preferences: {context.get('style_preferences', {})}
-- Change Analysis: {analysis}
-
-CURRENT {code_type.upper()} CODE CONTEXT:
-- Code Length: {len(current_code)} characters
-- Preserved Elements: {preserved_elements}
-- Code Type: {code_type}
-
-YOUR TASK:
-Create a detailed, professional prompt for a {code_type.upper()} developer that will produce high-quality results.
-
-PROMPT ENHANCEMENT REQUIREMENTS:
-
-1. **INTERPRET USER INTENT**:
-   - What is the user really trying to achieve?
-   - What business outcome do they want?
-   - What specific elements need to change?
-
-2. **ADD TECHNICAL SPECIFICITY**:
-   - Specify exact CSS properties, selectors, or HTML elements to modify
-   - Include specific measurements, colors, or layout requirements
-   - Define responsive behavior and browser compatibility
-
-3. **INCLUDE INDUSTRY BEST PRACTICES**:
-   - Add modern web development standards
-   - Include accessibility requirements
-   - Specify performance considerations
-   - Add UX/UI best practices relevant to their business
-
-4. **SPECIFY PRESERVATION REQUIREMENTS**:
-   - Clearly identify what must NOT be changed
-   - Specify backward compatibility requirements
-   - Define how to integrate changes without breaking existing functionality
-
-5. **ADD QUALITY STANDARDS**:
-   - Include specific design quality benchmarks
-   - Reference professional websites as inspiration
-   - Specify code quality and maintainability requirements
-
-EXAMPLE ENHANCEMENT:
-User says: "make the header blue"
-Enhanced prompt: "Update the header background to a professional navy blue (#1e3a8a) with subtle gradient (linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)). Ensure text remains accessible with white/light text. Preserve existing header functionality including navigation hover states. Add subtle box-shadow for depth. Maintain responsive behavior on mobile devices."
-
-Create a comprehensive, technical prompt that will produce professional results:
-
-ENHANCED {code_type.upper()} DEVELOPMENT PROMPT:"""
-
-        try:
-            response = LLM_MODEL.invoke(prompt_engineering_request)
-            enhanced_prompt = response.content if hasattr(response, 'content') else str(response)
-            
-            # Add the current code context to the enhanced prompt
-            final_prompt = f"""{enhanced_prompt}
-
-CURRENT {code_type.upper()} CODE TO MODIFY:
-{current_code}
-
-IMPORTANT: Follow the requirements above and return ONLY the updated {code_type.upper()} code."""
-            
-            return final_prompt.strip()
-            
-        except Exception as e:
-            st.error(f"❌ Prompt enhancement error: {str(e)[:100]}")
-            return None
-    
-    @staticmethod
-    def _extract_preserved_elements(html_content):
-        """Extract key elements that should be preserved in HTML"""
-        preserved = []
-        
-        # Check for working forms
-        if '<form' in html_content.lower():
-            preserved.append("Contact forms and form functionality")
-        
-        # Check for navigation
-        if '<nav' in html_content.lower() or 'navbar' in html_content.lower():
-            preserved.append("Navigation menu and links")
-        
-        # Check for interactive elements
-        if '<button' in html_content.lower():
-            preserved.append("Buttons and their functionality")
-        
-        # Check for structured content
-        if '<section' in html_content.lower():
-            preserved.append("Section structure and layout")
-        
-        return "; ".join(preserved) if preserved else "Basic HTML structure"
-    
-    @staticmethod
-    def _extract_preserved_css_rules(css_content):
-        """Extract key CSS rules that should be preserved"""
-        preserved = []
-        
-        # Check for animations
-        if 'animation' in css_content.lower() or 'transition' in css_content.lower():
-            preserved.append("Animations and transitions")
-        
-        # Check for responsive design
-        if '@media' in css_content.lower():
-            preserved.append("Responsive design rules")
-        
-        # Check for form styling
-        if 'form' in css_content.lower() or 'input' in css_content.lower():
-            preserved.append("Form styling and input styles")
-        
-        # Check for layout systems
-        if 'grid' in css_content.lower() or 'flex' in css_content.lower():
-            preserved.append("Grid and flexbox layouts")
-        
-        return "; ".join(preserved) if preserved else "Basic styling rules"
+        """Analyze what type of change is needed for single file updates"""
+        # Simplified analysis for single-file approach
+        return {
+            'change_type': 'incremental',
+            'scope': 'medium',
+            'intent': feedback,
+            'priority_areas': ['styling', 'content']
+        }
     
     @staticmethod
     def _calculate_change_ratio(original, modified):
@@ -1373,18 +909,56 @@ IMPORTANT: Follow the requirements above and return ONLY the updated {code_type.
     
     @staticmethod
     def _clean_code_response(content, code_type):
-        """Clean LLM response to extract pure code"""
+        """Clean LLM response to extract pure code, removing explanatory text"""
         content = content.strip()
         
-        # Remove markdown code blocks
-        if content.startswith(f'```{code_type}'):
-            content = content[len(f'```{code_type}'):].strip()
-        elif content.startswith('```'):
-            content = content[3:].strip()
-        if content.endswith('```'):
-            content = content[:-3].strip()
+        # Handle HTML responses specifically
+        if code_type == 'html':
+            # Look for DOCTYPE declaration - this is where actual HTML starts
+            doctype_match = content.find('<!DOCTYPE html>')
+            if doctype_match != -1:
+                # Extract from DOCTYPE to end of HTML
+                content = content[doctype_match:]
+                
+                # Find the closing </html> tag
+                html_end = content.rfind('</html>')
+                if html_end != -1:
+                    content = content[:html_end + 7]  # Include the </html> tag
         
-        return content
+        # Remove markdown code blocks
+        if '```html' in content:
+            # Extract content between ```html and ```
+            start = content.find('```html')
+            if start != -1:
+                start = content.find('\n', start) + 1  # Start after the newline
+                end = content.find('```', start)
+                if end != -1:
+                    content = content[start:end].strip()
+        elif '```' in content:
+            # Generic code block handling
+            start = content.find('```')
+            if start != -1:
+                start = content.find('\n', start) + 1  # Start after the newline
+                end = content.find('```', start)
+                if end != -1:
+                    content = content[start:end].strip()
+        
+        # Additional cleanup for HTML
+        if code_type == 'html':
+            # Remove any text before DOCTYPE if it still exists
+            doctype_pos = content.find('<!DOCTYPE html>')
+            if doctype_pos > 0:
+                content = content[doctype_pos:]
+                
+            # Remove any text after </html>
+            html_end = content.find('</html>')
+            if html_end != -1:
+                # Look for any text after </html> and remove it
+                after_html = content[html_end + 7:].strip()
+                if after_html:
+                    content = content[:html_end + 7]
+        
+        return content.strip()
     
     @staticmethod
     def _validate_html(content):
@@ -1396,16 +970,6 @@ IMPORTANT: Follow the requirements above and return ONLY the updated {code_type.
             '<body>' in content_lower and
             '</html>' in content_lower and
             len(content) > 200
-        )
-    
-    @staticmethod
-    def _validate_css(content):
-        """Basic CSS validation"""
-        return (
-            len(content) > 50 and
-            '{' in content and
-            '}' in content and
-            ':' in content
         )
     
     @staticmethod
@@ -1461,7 +1025,7 @@ IMPORTANT: Follow the requirements above and return ONLY the updated {code_type.
     
     @staticmethod
     def _log_incremental_change(feedback, analysis):
-        """Log the incremental change for future reference"""
+        """Log the change for future reference"""
         change_log = {
             'feedback': feedback,
             'timestamp': time.time(),
@@ -1476,74 +1040,6 @@ IMPORTANT: Follow the requirements above and return ONLY the updated {code_type.
         # Keep only last 15 changes
         if len(st.session_state.incremental_changes) > 15:
             st.session_state.incremental_changes.pop(0)
-    
-    @staticmethod
-    def _fallback_regex_parsing(feedback, workspace_path):
-        """Fallback regex-based parsing when no LLM is available"""
-        try:
-            html_path = os.path.join(workspace_path, 'index.html')
-            css_path = os.path.join(workspace_path, 'styles.css')
-            
-            with open(html_path, 'r', encoding='utf-8') as f:
-                html_content = f.read()
-            with open(css_path, 'r', encoding='utf-8') as f:
-                css_content = f.read()
-            
-            feedback_lower = feedback.lower()
-            changes_made = False
-            
-            # Basic regex patterns for common requests
-            if 'blue' in feedback_lower and ('header' in feedback_lower or 'background' in feedback_lower):
-                css_content = css_content.replace('#3498db', '#007bff')
-                css_content = css_content.replace('#68dff9', '#007bff')
-                changes_made = True
-            elif 'red' in feedback_lower and ('header' in feedback_lower or 'background' in feedback_lower):
-                css_content = css_content.replace('#3498db', '#dc3545')
-                css_content = css_content.replace('#68dff9', '#dc3545')
-                changes_made = True
-            elif 'green' in feedback_lower and ('header' in feedback_lower or 'background' in feedback_lower):
-                css_content = css_content.replace('#3498db', '#28a745')
-                css_content = css_content.replace('#68dff9', '#28a745')
-                changes_made = True
-            elif 'center' in feedback_lower and 'button' in feedback_lower:
-                css_content = FeedbackAgent.center_buttons(css_content)
-                changes_made = True
-            elif 'bigger' in feedback_lower and 'text' in feedback_lower:
-                css_content = css_content.replace('font-size: 2rem;', 'font-size: 2.5rem;')
-                css_content = css_content.replace('font-size: 1.5rem;', 'font-size: 2rem;')
-                changes_made = True
-            
-            # Write updated files
-            with open(html_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-            with open(css_path, 'w', encoding='utf-8') as f:
-                f.write(css_content)
-            
-            if changes_made:
-                return True, "✅ Applied basic changes using fallback regex parsing"
-            else:
-                return False, "⚠️ No patterns matched. Try: 'make header blue', 'center buttons', 'bigger text'"
-            
-        except Exception as e:
-            return False, f"❌ Error in fallback parsing: {str(e)}"
-    
-    @staticmethod
-    def center_buttons(css_content):
-        """Center buttons across the site (fallback method)"""
-        button_center_css = '''
-
-/* Button Centering */
-.contact-form {
-    text-align: center;
-}
-.contact-form button {
-    display: block;
-    margin: 1rem auto 0 auto;
-}'''
-        
-        if 'margin: 1rem auto' not in css_content:
-            css_content += button_center_css
-        return css_content
 
 class PackageAgent:
     """Handles project packaging and download"""
@@ -1561,6 +1057,175 @@ class PackageAgent:
                         zipf.write(file_path, arc_name)
         
         return zip_path
+
+class ImageService:
+    """Handles professional image integration from free sources"""
+    
+    @staticmethod
+    def get_business_images(business_type, sections, count=4):
+        """Get relevant professional images for the business"""
+        if UNSPLASH_ACCESS_KEY and UNSPLASH_ACCESS_KEY != "your_unsplash_key_here":
+            return ImageService._get_unsplash_images(business_type, sections, count)
+        else:
+            return ImageService._get_placeholder_images(business_type, count)
+    
+    @staticmethod
+    def _get_unsplash_images(business_type, sections, count=4):
+        """Fetch professional images from Unsplash API"""
+        try:
+            # Map business types to search keywords
+            keyword_map = {
+                'sap consultancy': 'business meeting professional office',
+                'consultancy': 'business consulting professional meeting',
+                'consulting': 'corporate office business team',
+                'technology': 'technology computer modern office',
+                'software': 'developer coding technology office',
+                'healthcare': 'medical healthcare professional doctor',
+                'medical': 'hospital medical professional clean',
+                'legal': 'law office professional business suit',
+                'restaurant': 'restaurant food chef kitchen',
+                'food': 'food restaurant chef cooking',
+                'creative': 'creative design office modern workspace',
+                'agency': 'creative agency modern office team',
+                'education': 'education learning students classroom',
+                'real estate': 'real estate modern house architecture',
+                'non-profit': 'community people helping volunteer'
+            }
+            
+            # Get relevant keywords
+            keywords = keyword_map.get(business_type.lower(), 'professional business office')
+            
+            # Fetch images from Unsplash
+            url = "https://api.unsplash.com/search/photos"
+            params = {
+                'query': keywords,
+                'per_page': count,
+                'orientation': 'landscape',
+                'content_filter': 'high',
+                'order_by': 'relevant'
+            }
+            headers = {
+                'Authorization': f'Client-ID {UNSPLASH_ACCESS_KEY}'
+            }
+            
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                images = []
+                
+                for photo in data.get('results', []):
+                    images.append({
+                        'url': photo['urls']['regular'],
+                        'url_small': photo['urls']['small'],
+                        'alt': photo.get('alt_description', f'Professional {business_type} image'),
+                        'photographer': photo['user']['name'],
+                        'photographer_url': photo['user']['links']['html']
+                    })
+                
+                return images
+            else:
+                st.warning(f"Unsplash API error: {response.status_code}")
+                return ImageService._get_placeholder_images(business_type, count)
+                
+        except Exception as e:
+            st.warning(f"Image fetch error: {str(e)[:50]}... Using placeholders")
+            return ImageService._get_placeholder_images(business_type, count)
+    
+    @staticmethod
+    def _get_placeholder_images(business_type, count=4):
+        """Generate placeholder images as fallback"""
+        # Business-themed placeholder images
+        placeholder_themes = {
+            'consultancy': 'business/meeting',
+            'consulting': 'business/team', 
+            'technology': 'tech/office',
+            'software': 'tech/coding',
+            'healthcare': 'medical/hospital',
+            'medical': 'medical/clinic',
+            'legal': 'business/law',
+            'restaurant': 'food/restaurant',
+            'food': 'food/kitchen',
+            'creative': 'design/creative',
+            'agency': 'design/agency',
+            'education': 'education/learning',
+            'real estate': 'architecture/house'
+        }
+        
+        theme = placeholder_themes.get(business_type.lower(), 'business/office')
+        base_url = "https://picsum.photos"
+        
+        images = []
+        sizes = ['1200x600', '800x400', '1000x500', '900x450']
+        
+        for i in range(count):
+            size = sizes[i % len(sizes)]
+            images.append({
+                'url': f"{base_url}/{size}?random={i+1}",
+                'url_small': f"{base_url}/400x200?random={i+1}",
+                'alt': f'Professional {business_type} image',
+                'photographer': 'Placeholder Image',
+                'photographer_url': '#'
+            })
+        
+        return images
+    
+    @staticmethod
+    def create_image_html(images, business_type):
+        """Create HTML code for embedding images"""
+        if not images:
+            return ""
+        
+        hero_image = images[0] if images else None
+        gallery_images = images[1:] if len(images) > 1 else []
+        
+        html_parts = []
+        
+        # Hero image
+        if hero_image:
+            html_parts.append(f"""
+            <!-- Hero Background Image -->
+            <style>
+                .hero-section {{
+                    background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{hero_image['url']}');
+                    background-size: cover;
+                    background-position: center;
+                    color: white;
+                }}
+            </style>""")
+        
+        # Gallery section
+        if gallery_images:
+            gallery_html = ""
+            for img in gallery_images[:3]:  # Max 3 gallery images
+                gallery_html += f"""
+                <div class="gallery-item">
+                    <img src="{img['url_small']}" alt="{img['alt']}" loading="lazy">
+                </div>"""
+            
+            html_parts.append(f"""
+            <!-- Image Gallery -->
+            <div class="image-gallery">
+                {gallery_html}
+            </div>
+            
+            <style>
+                .image-gallery {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 1rem;
+                    margin: 2rem 0;
+                }}
+                .gallery-item img {{
+                    width: 100%;
+                    height: 200px;
+                    object-fit: cover;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                }}
+            </style>""")
+        
+        return "\n".join(html_parts)
 
 def initialize_session():
     """Initialize session state variables"""
@@ -1629,13 +1294,18 @@ def main():
     
     # Display AI System Status
     if LLM_MODEL:
-        st.success(f"🤖 **Multiagent LLM System Active**: {LLM_NAME}")
-        st.info("**Active AI Agents**: SpecAgent (wizard) • CodeAgent (LLM-powered) • PreviewAgent (live) • FeedbackAgent (LLM-powered) • PackageAgent (utility)")
-    else:
-        st.warning("⚠️ **No LLM Available** - Running in fallback mode with regex parsing")
-        st.info("**Available**: SpecAgent • CodeAgent (template) • PreviewAgent • FeedbackAgent (regex) • PackageAgent")
+        st.success(f"🤖 **Single-File AI System**: Using {LLM_NAME}")
+        st.info("🗂️ **Embedded Architecture**: Complete websites in one HTML file with embedded CSS/JS")
         
-        with st.expander("🔧 Setup LLM for Full Multiagent Capabilities"):
+        # Image service status
+        if UNSPLASH_ACCESS_KEY and UNSPLASH_ACCESS_KEY != "your_unsplash_key_here":
+            st.success("🖼️ **Professional Images**: Unsplash API connected - High-quality business images")
+        else:
+            st.info("🖼️ **Image Service**: Using placeholder images - Add Unsplash API for professional photos")
+    else:
+        st.warning("⚠️ **Fallback Mode**: Basic template generation")
+        
+        with st.expander("Setup LLM for Full Multiagent Capabilities"):
             st.markdown("""
             To enable the full multiagent LLM system, add one of these API keys:
             
@@ -1650,6 +1320,26 @@ def main():
             ```
             
             Add to your `.env` file or environment variables, then restart the application.
+            """)
+        
+        with st.expander("Setup Professional Image Integration (Optional)"):
+            st.markdown("""
+            For automatic professional business images, add Unsplash API:
+            
+            **Unsplash API** (Free - 50 requests/hour)
+            1. Create account at [unsplash.com/developers](https://unsplash.com/developers)
+            2. Create a new application to get your Access Key
+            3. Add to your `.env` file:
+            ```bash
+            UNSPLASH_ACCESS_KEY=your_unsplash_access_key_here
+            ```
+            4. Restart the application
+            
+            **Features with Unsplash:**
+            - High-quality professional photos
+            - Business-specific imagery (consulting, tech, medical, etc.)
+            - Hero backgrounds and gallery images
+            - Automatic selection based on your business type
             """)
     
     # Sidebar - SpecAgent
@@ -1755,7 +1445,7 @@ def main():
                         st.markdown(f"""
                         **Features**: {features_text}  
                         **Changes Made**: {len(st.session_state.get('incremental_changes', []))}  
-                        **Conversations**: {len(st.session_state.get('conversation_memory', []))}
+                        **Architecture**: Single HTML file
                         """)
             
             # Chat-style feedback input with auto-clear
@@ -1767,9 +1457,9 @@ def main():
                 key=feedback_key
             )
             
-            if st.button("🚀 Apply Incremental Update", type="primary", use_container_width=True):
+            if st.button("🚀 Apply Single-File Update", type="primary", use_container_width=True):
                 if feedback.strip():
-                    with st.spinner("🧠 AI analyzing context and applying incremental changes..."):
+                    with st.spinner("🗂️ AI updating single HTML file with embedded styles..."):
                         success, message = FeedbackAgent.parse_and_apply_feedback(
                             feedback, st.session_state.workspace_path
                         )
@@ -1788,37 +1478,44 @@ def main():
                 else:
                     st.warning("Please describe what you'd like to improve!")
             
-            # Show incremental development capabilities
-            with st.expander("💡 Incremental Development Features"):
+            # Show single-file development capabilities
+            with st.expander("🗂️ Single-File Architecture Benefits"):
                 if LLM_MODEL:
                     st.markdown("""
-                    **🧠 Context Awareness:**
-                    - Remembers your business type and previous requests
-                    - Builds on existing content rather than starting over
-                    - Maintains consistency across all changes
+                    **🎯 Complete Websites in One File:**
+                    - All HTML, CSS, and JavaScript embedded in single index.html
+                    - No broken links or missing files - everything is self-contained
+                    - Perfect for deployment - just upload one file anywhere
+                    - Better AI context - LLM sees complete design in one view
                     
-                    **🔄 Incremental Building:**
-                    - "Add a contact form" → Adds form keeping existing design
-                    - "Make it more professional" → Enhances current styling  
-                    - "Add pricing section" → Integrates seamlessly with layout
+                    **🧠 Cohesive Design Generation:**
+                    - LLM creates HTML and CSS together for better consistency
+                    - No conflicting styles between separate files
+                    - Professional responsive design with embedded media queries
+                    - Modern CSS variables and JavaScript interactions included
                     
-                    **💬 Progressive Conversation:**
-                    - "Make this a restaurant" → Changes to restaurant theme
-                    - "Add menu sections" → Builds on restaurant concept
-                    - "Make it more elegant" → Refines restaurant styling
-                    - "Add online ordering" → Adds feature to restaurant site
+                    **📦 Deployment Simplicity:**
+                    - Download one complete file - ready to deploy anywhere
+                    - Works on any web server without configuration
+                    - No dependencies or external resources (except optional Google Fonts)
+                    - Perfect for quick prototypes or production websites
+                    
+                    **⚡ Performance Benefits:**
+                    - Fewer HTTP requests - everything loads together
+                    - No external CSS/JS file dependencies
+                    - Optimized for fast loading and caching
+                    - Self-contained and portable across platforms
                     """)
                 else:
                     st.markdown("""
-                    **Limited to basic patterns:**
-                    - "Make header blue/red/green"
-                    - "Center all buttons" 
-                    - "Make text bigger"
+                    **Limited template mode:**
+                    - Basic single-file template generation
+                    - Simple color and size modifications
                     """)
             
             # Recent changes with context
             if st.session_state.get('incremental_changes'):
-                st.subheader("📈 Incremental Development History")
+                st.subheader("📈 Single-File Development History")
                 recent_changes = st.session_state.incremental_changes[-5:]
                 for i, change in enumerate(reversed(recent_changes)):
                     scope_icon = {"small": "🔹", "medium": "🔸", "large": "🔶"}.get(change.get('scope', 'medium'), "🔸")
@@ -1861,6 +1558,7 @@ def main():
             - 🎯 **Truly Custom Websites**: No templates - each site is designed from scratch by AI
             - 🧠 **Intelligent Understanding**: AI interprets your requirements and creates unique designs
             - 🎨 **Creative Design Generation**: Professional layouts, color schemes, and styling
+            - 🖼️ **Professional Images**: Automatic integration of high-quality business photos
             - 💬 **Natural Language Control**: Make changes by simply describing what you want
             - 🔄 **Iterative Improvement**: AI learns from your feedback to refine the design
             - 📱 **Modern Standards**: Responsive, accessible, and contemporary web design
@@ -1872,9 +1570,11 @@ def main():
             - ⚠️ **Basic Template Mode**: Uses predefined templates instead of AI generation
             - 🔍 **Pattern Matching**: Limited feedback processing using regex patterns
             - 📄 **Standard Layouts**: Generic designs that aren't customized to your needs
+            - 🖼️ **Placeholder Images**: Generic placeholder images only
             
             **To unlock the full AI multiagent capabilities:**
             - Add an OpenAI API key to your `.env` file: `OPENAI_API_KEY=your_key_here`
+            - Optionally add Unsplash API key for professional images: `UNSPLASH_ACCESS_KEY=your_key`
             - Restart the application to activate GPT-4o powered generation
             """)
         
