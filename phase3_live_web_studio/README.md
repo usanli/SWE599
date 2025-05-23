@@ -1,38 +1,70 @@
-# 🕸️ WebWeaver: Live Web Development Studio
+# 🕸️ WebWeaver: Live Multi-Agent LLM Web Development Studio
 
-> A streamlined multi-agent web development tool with real-time preview and natural language editing
+> A real-time multi-agent LLM system for web development with live preview and natural language editing
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.43-red.svg)
+![LangChain](https://img.shields.io/badge/LangChain-Latest-green.svg)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-green.svg)
 
 ## 🎯 Project Overview
 
-This is **WebWeaver's Live Web Development Studio** - the culmination of multi-agent development tools research. Building on lessons learned from advanced LLM systems and multi-model coordination, WebWeaver focuses on **real-time web development with instant feedback**.
+This is **WebWeaver's Live Multi-Agent LLM Web Development Studio** - a sophisticated multiagent AI system that combines the power of large language models with real-time web development capabilities. The system demonstrates advanced multiagent coordination with live preview and natural language interaction.
 
-**Key Philosophy**: Maximum functionality with minimal complexity - live web development for everyone.
+**Key Innovation**: Real-time LLM-powered web development with instant feedback and live preview capabilities.
 
 ## ✨ Features
 
 - 🧙‍♂️ **SpecAgent**: Guided setup wizard for website requirements
-- 🛠️ **CodeAgent**: Generates HTML/CSS scaffolding automatically  
+- 🛠️ **CodeAgent**: LLM-powered HTML/CSS scaffolding generation (with template fallback)  
 - 🔍 **PreviewAgent**: Live preview with auto-reload on file changes
-- 🎨 **FeedbackAgent**: Natural language style tweaks and modifications
+- 🎨 **FeedbackAgent**: LLM-powered natural language style modifications (with regex fallback)
 - 📦 **PackageAgent**: Download ready-to-deploy ZIP files
+
+## 🤖 Multi-Agent LLM Architecture
+
+### LLM Model Support
+- **OpenAI GPT-4o**: Latest and most capable model for superior code generation and reasoning
+- **Google Gemini Pro**: Advanced reasoning capabilities
+- **Fallback Mode**: Regex-based parsing when no LLM is available
+
+### Agent Coordination
+- **SpecAgent**: Requirements gathering and specification management
+- **CodeAgent**: Intelligent code generation using GPT-4o prompts
+- **PreviewAgent**: Real-time file monitoring and server management
+- **FeedbackAgent**: Natural language understanding and code modification with GPT-4o
+- **PackageAgent**: Automated packaging and deployment preparation
 
 ## 🚀 Quick Start
 
-```bash
-# 1. Install dependencies (only 2 required!)
-pip install -r requirements.txt
+### Prerequisites
+- Python 3.10+
+- API key for OpenAI or Google Gemini (optional but recommended for full LLM capabilities)
 
-# 2. Run the application
-python run.py
-# OR: streamlit run app.py
+### Setup Instructions
 
-# 3. Open your browser
-# http://localhost:8501
-```
+1. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Configure LLM (Optional but Recommended)**:
+   ```bash
+   # Create .env file with your API key
+   echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
+   # OR
+   echo "GEMINI_API_KEY=your_gemini_api_key_here" > .env
+   ```
+
+3. **Launch WebWeaver**:
+   ```bash
+   python run.py
+   # OR: streamlit run app.py
+   ```
+
+4. **Access Multi-Agent System**:
+   - Open http://localhost:8501
+   - System will auto-detect available LLM and configure agents accordingly
 
 ## 💡 How to Use WebWeaver
 
