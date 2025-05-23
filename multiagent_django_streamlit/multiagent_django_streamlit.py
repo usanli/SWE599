@@ -1,7 +1,7 @@
 ﻿import streamlit as st
 import os
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
@@ -14,17 +14,21 @@ import random
 
 # Load API key from .env file
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Initialize different OpenAI models for specialized agents
-llm_basic = ChatOpenAI(
-    model="gpt-4",
-    openai_api_key=OPENAI_API_KEY
+# Initialize different Gemini models for specialized agents
+llm_basic = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    google_api_key=GEMINI_API_KEY,
+    temperature=0.3,
+    convert_system_message_to_human=True
 )
 
-llm_advanced = ChatOpenAI(
-    model="gpt-4o",  # More advanced model for complex tasks
-    openai_api_key=OPENAI_API_KEY
+llm_advanced = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",  # Use the best Gemini model for complex tasks
+    google_api_key=GEMINI_API_KEY,
+    temperature=0.7,
+    convert_system_message_to_human=True
 )
 
 # Memory for agents to track conversation history
@@ -39,7 +43,12 @@ performance_memory = ConversationBufferMemory(input_key="secured_code", memory_k
 def init_agent_chains():
     """Initialize all agent chains with langchain components"""
     
-    llm = ChatOpenAI(temperature=0.7, model_name="gpt-4")
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.0-flash",
+        google_api_key=GEMINI_API_KEY,
+        temperature=0.7,
+        convert_system_message_to_human=True
+    )
     
     # Project Manager / Planner Chain
     planner_prompt = ChatPromptTemplate.from_template("""
@@ -541,7 +550,18 @@ integration_specialist_chain = LLMChain(llm=llm_advanced, prompt=integration_spe
 
 # 🌍 **Streamlit UI**
 st.set_page_config(layout="wide", page_title="Interactive Multi-Agent Developer")
+
+# Check for Gemini API key
+if not GEMINI_API_KEY:
+    st.error("🚨 GEMINI_API_KEY not found. Please set it in your .env file or environment variables.")
+    st.info("To get your Gemini API key:")
+    st.markdown("1. Go to [Google AI Studio](https://ai.google.dev/)")
+    st.markdown("2. Create an API key")
+    st.markdown("3. Add it to your .env file: `GEMINI_API_KEY=your_api_key_here`")
+    st.stop()
+
 st.title("🚀 Interactive Django & Streamlit Multi-Agent Developer")
+st.markdown("### Powered by Google Gemini 2.0 Flash 🤖")
 st.write("This AI system uses specialized agents with your feedback to create high-quality applications.")
 
 # Sidebar for workflow configuration
@@ -759,7 +779,7 @@ with tabs[0]:  # Request Tab
             st.session_state['user_request'] = user_request
             st.session_state['updates']["plan"] += 1
             st.rerun()
-        else:
+    else:
             st.error("Please enter a valid request.")
     
     # Create a visually appealing status display

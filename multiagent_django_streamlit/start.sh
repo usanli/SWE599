@@ -1,0 +1,1 @@
+#!/bin/bashif [ -f ./.env ]; then    echo "Using existing .env file"else    echo "OPENAI_API_KEY=your_api_key_here" > .env    echo "Please update the .env file with your actual API key"fistreamlit run multiagent_django_streamlit.py 
