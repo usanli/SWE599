@@ -1,4 +1,6 @@
-# 🚀 Phase 2: Multi-Agent Website Builder
+# 📚 ARCHIVED: Phase 2: Multi-Agent Website Builder
+
+> **⚠️ ARCHIVED PROJECT**: This is Phase 2 of WebWeaver development. For the **current production version**, see [`../phase3_live_web_studio/`](../phase3_live_web_studio/)
 
 > A sophisticated website building system using multiple OpenAI models with specialized agent coordination
 
@@ -6,8 +8,11 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-Latest-red.svg)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o%20%2B%20GPT--4-blue.svg)
 ![LangChain](https://img.shields.io/badge/LangChain-Latest-green.svg)
+![Status](https://img.shields.io/badge/Status-Archived-orange.svg)
 
-This application demonstrates a multi-model AI approach using both GPT-4o and GPT-4 for specialized website generation tasks with coordinated multi-agent workflows.
+**Historical Note**: This application demonstrates a multi-model AI approach using both GPT-4o and GPT-4 for specialized website generation tasks with coordinated multi-agent workflows. This phase provided valuable insights that led to the current production implementation.
+
+**🎯 Current Version**: For the latest WebWeaver with clean UI, console logging, and ProductManager coordination, see [Phase 3 Live Web Studio](../phase3_live_web_studio/)
 
 ## 🤖 AI Model Architecture
 

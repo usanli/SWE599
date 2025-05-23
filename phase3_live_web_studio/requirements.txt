@@ -1,10 +1,16 @@
-# Core dependencies for multiagent system
+# WebWeaver AI Website Builder - Essential Dependencies
+
+# Core Framework
 streamlit==1.43.2
 watchdog==3.0.0
 
-# LLM dependencies for multiagent AI capabilities (essential only)
+# AI Integration
 langchain-openai>=0.3.0
 python-dotenv>=1.0.0
+
+# Note: These are the minimal dependencies needed
+# Image integration disabled for better quality
+# Add .env file with OPENAI_API_KEY for AI features
 
 # Optional: Add Gemini support if needed
 # langchain-google-genai>=2.0.0 

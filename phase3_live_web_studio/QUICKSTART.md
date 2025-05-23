@@ -1,66 +1,99 @@
-# 🚀 WebWeaver - 2-Minute Quick Start
+# 🚀 WebWeaver QuickStart - PowerShell Edition
 
-Get your WebWeaver live web development studio running in under 2 minutes!
+> Get WebWeaver running in under 2 minutes on Windows
 
-## 🎯 What You'll Get
+## Prerequisites
+- Python 3.10+
+- PowerShell (Windows)
 
-**WebWeaver** is a live web development studio that lets you build websites through natural language commands with instant preview.
+## Quick Setup
 
-## ⚡ Quick Start
-
-### Option 1: Auto-Install (Recommended)
-```bash
-python run.py
-```
-The script will automatically install missing dependencies and launch WebWeaver.
-
-### Option 2: Manual Install
-```bash
-pip install streamlit watchdog
-streamlit run app.py
+### 1. Install Dependencies
+```powershell
+pip install -r requirements.txt
 ```
 
-## 🌐 Access Your Studio
+### 2. Add API Key (Optional but Recommended)
+```powershell
+# Copy the example file
+Copy-Item .env.example .env
 
-Open your browser and go to: **http://localhost:8501**
+# Edit .env file and add your OpenAI API key
+# OPENAI_API_KEY=your_actual_api_key_here
+```
 
-## 🎮 How to Use WebWeaver
+### 3. Launch WebWeaver
+```powershell
+# PowerShell method (separate commands)
+cd phase3_live_web_studio
+streamlit run app.py --server.port 8501
+```
 
-### 1. **Configure Your Site** (Left Sidebar)
-- Set your site title
-- Choose navigation preferences  
-- Pick your primary color
-- Select sections (header, hero, features, etc.)
+### 4. Open Browser
+- Navigate to: http://localhost:8501
+- Start building websites with AI!
 
-### 2. **Generate Your Website**
-Click "🚀 Start Development" to generate your initial website.
+## PowerShell Tips
 
-### 3. **Live Editing**
-Use natural language commands in the feedback box:
-- "Make header background blue"
-- "Add footer"
-- "Make text bigger"
-- "Center everything"
+### Running Commands
+❌ **Don't use** `&&` (not supported in PowerShell)
+```powershell
+# Wrong:
+cd directory && command
+```
 
-### 4. **Download & Deploy**
-Click "📦 Download ZIP" to get your complete website ready for deployment.
+✅ **Use separate commands**
+```powershell
+# Correct:
+cd directory
+command
+```
 
-## ✨ Features
+### Alternative Launch Methods
+```powershell
+# Method 1: Direct
+streamlit run app.py --server.port 8501
 
-- 🧙‍♂️ **Guided Setup Wizard**: Step-by-step site configuration
-- 🛠️ **Instant Generation**: Get your site in under 5 seconds
-- 🔍 **Live Preview**: See changes immediately with auto-reload
-- 🎨 **Natural Language Editing**: Talk to your website in plain English
-- 📦 **One-Click Download**: Production-ready ZIP files
-- 🔄 **Real-time Updates**: No page refresh needed
+# Method 2: Using Python module
+python -m streamlit run app.py --server.port 8501
+```
 
-## 🎯 Perfect For
+## Console Logging
 
-- **Rapid Prototyping**: Get website mockups in minutes
-- **Design Exploration**: Try different layouts and colors quickly
-- **Client Presentations**: Generate demo sites on the fly
-- **Learning**: Understand web development through immediate feedback
+All agent communications appear in the PowerShell terminal:
+```
+[14:23:45] SpecAgent → ProductManager: Sending user specifications
+[14:23:47] ProductManager → CodeAgent: Sending refined specifications
+[14:23:49] CodeAgent → System: Website generation completed
+```
+
+## Troubleshooting
+
+### Dependencies Issue
+```powershell
+# If dependencies fail, install core packages only
+pip install streamlit watchdog langchain-openai python-dotenv
+```
+
+### API Key Not Working
+- Ensure .env file is in the same directory as app.py
+- Check that the API key starts with "sk-"
+- Restart the application after adding the key
+
+### Port Already in Use
+```powershell
+# Use a different port
+streamlit run app.py --server.port 8502
+```
 
 ---
 
-**Ready to weave your next website?** 🕸️ Just run `python run.py` and start creating! 
+## What to Expect
+
+1. **Clean Interface**: Minimalistic UI without verbose explanations
+2. **Console Debug**: All technical info appears in PowerShell terminal
+3. **Instant Generation**: Websites created in <5 seconds
+4. **Natural Language**: Edit with commands like "make header darker"
+5. **One-Click Download**: Get complete websites as ZIP files
+
+**Ready to build?** Just run the commands above and start creating! 🎨 

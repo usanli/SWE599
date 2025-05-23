@@ -1,45 +1,66 @@
-# 🕸️ WebWeaver: Live Multi-Agent LLM Web Development Studio
+# 🕸️ WebWeaver: AI Website Builder
 
-> A real-time multi-agent LLM system for web development with live preview and natural language editing
+> Clean, minimalistic AI-powered website builder with multi-agent architecture
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.43-red.svg)
-![LangChain](https://img.shields.io/badge/LangChain-Latest-green.svg)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-green.svg)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-green.svg)
 
 ## 🎯 Project Overview
 
-This is **WebWeaver's Live Multi-Agent LLM Web Development Studio** - a sophisticated multiagent AI system that combines the power of large language models with real-time web development capabilities. The system demonstrates advanced multiagent coordination with live preview and natural language interaction.
+WebWeaver is a production-ready AI website builder that combines **clean, minimalistic design** with **sophisticated multi-agent AI coordination**. Built for speed and simplicity, it creates professional websites in seconds with natural language editing capabilities.
 
-**Key Innovation**: Real-time LLM-powered web development with instant feedback and live preview capabilities.
+**Key Innovation**: ProductManager-coordinated AI agents with console logging and smart risk management.
 
 ## ✨ Features
 
-- 🧙‍♂️ **SpecAgent**: Guided setup wizard for website requirements
-- 🛠️ **CodeAgent**: LLM-powered HTML/CSS scaffolding generation (with template fallback)  
-- 🔍 **PreviewAgent**: Live preview with auto-reload on file changes
-- 🎨 **FeedbackAgent**: LLM-powered natural language style modifications (with regex fallback)
-- 📦 **PackageAgent**: Download ready-to-deploy ZIP files
+- 🎯 **Clean Interface**: Minimalistic UI without verbose explanations
+- 🤖 **6 AI Agents**: Coordinated multi-agent system for intelligent website creation
+- 📟 **Console Logging**: All agent communications logged to terminal (like "OpenAI key loaded")
+- 🛡️ **Smart Risk Management**: ProductManager prevents breaking changes
+- ⚡ **Single HTML**: Complete websites in one file with embedded CSS/JS
+- 🔄 **Live Preview**: Real-time updates with auto-reload
+- 💬 **Natural Language**: Simple feedback like "make header darker"
+- 📦 **Instant Download**: Get complete websites as ZIP files
 
-## 🤖 Multi-Agent LLM Architecture
+## 🤖 Multi-Agent Architecture
 
-### LLM Model Support
-- **OpenAI GPT-4o**: Latest and most capable model for superior code generation and reasoning
-- **Google Gemini Pro**: Advanced reasoning capabilities
-- **Fallback Mode**: Regex-based parsing when no LLM is available
+### 6-Agent System
+```
+User → SpecAgent → ProductManagerAgent → CodeAgent → Website
+         ↓              ↓                    ↓
+    FeedbackAgent ←← ProductManagerAgent ←← User Feedback
+         ↓
+    PackageAgent (Download) | PreviewAgent (Live Server)
+```
 
-### Agent Coordination
-- **SpecAgent**: Requirements gathering and specification management
-- **CodeAgent**: Intelligent code generation using GPT-4o prompts
-- **PreviewAgent**: Real-time file monitoring and server management
-- **FeedbackAgent**: Natural language understanding and code modification with GPT-4o
-- **PackageAgent**: Automated packaging and deployment preparation
+### Agent Responsibilities
+- **SpecAgent**: Clean wizard for website requirements
+- **ProductManagerAgent**: Refine specs and coordinate safe changes (NEW)
+- **CodeAgent**: Generate HTML/CSS using AI specifications
+- **PreviewAgent**: Live preview server with file monitoring
+- **FeedbackAgent**: Process feedback with ProductManager coordination
+- **PackageAgent**: Create downloadable ZIP files
+
+### Console Logging (NEW)
+All agent communications appear in terminal instead of cluttering UI:
+```bash
+[14:23:45] SpecAgent → ProductManager: Sending user specifications
+  Details: Business: TechCorp, Style: Professional Corporate
+[14:23:47] ProductManager → CodeAgent: Sending refined specifications
+  Details: Risk assessment completed, brand strategy defined
+[14:23:49] CodeAgent → LLM: Generating HTML with specifications
+  Details: Prompt length: 1247 chars
+[14:23:52] CodeAgent → System: Website generation completed
+  Details: HTML length: 8934 chars
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.10+
-- API key for OpenAI or Google Gemini (optional but recommended for full LLM capabilities)
+- OpenAI API key (recommended for AI features)
 
 ### Setup Instructions
 
@@ -48,217 +69,209 @@ This is **WebWeaver's Live Multi-Agent LLM Web Development Studio** - a sophisti
    pip install -r requirements.txt
    ```
 
-2. **Configure LLM (Optional but Recommended)**:
+2. **Configure AI (Recommended)**:
    ```bash
    # Create .env file with your API key
    echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
-   # OR
-   echo "GEMINI_API_KEY=your_gemini_api_key_here" > .env
    ```
 
 3. **Launch WebWeaver**:
    ```bash
-   python run.py
-   # OR: streamlit run app.py
+   # For PowerShell (use separate commands)
+   cd phase3_live_web_studio
+   streamlit run app.py --server.port 8501
+   
+   # For Bash/Linux
+   cd phase3_live_web_studio && streamlit run app.py --server.port 8501
    ```
 
-4. **Access Multi-Agent System**:
+4. **Access Clean Interface**:
    - Open http://localhost:8501
-   - System will auto-detect available LLM and configure agents accordingly
+   - Clean, minimal interface loads
+   - All debug info appears in terminal
 
 ## 💡 How to Use WebWeaver
 
-### 1. **Configure Your Site** (Sidebar Wizard)
-- **Site title**: "My Portfolio"
-- **Navigation**: ✅ Yes
-- **Primary color**: Choose your favorite
-- **Sections**: header, hero, features, contact form
+### 1. **Configure Your Site** (Clean Sidebar)
+- **Business name**: Enter your business name
+- **Purpose**: Select from dropdown (Consulting, Business, etc.)
+- **Design style**: Choose your preferred style
+- **Sections**: Select needed sections (About, Services, Contact, etc.)
 
-### 2. **Generate Your Website**
-Click "🚀 Start Development" and watch your site appear in seconds!
+### 2. **Generate Website** (Instant AI)
+- Click "🚀 Start Development"
+- Watch console for agent communications
+- Website appears in live preview (<5 seconds)
 
-### 3. **Live Editing with Natural Language**
-Type commands like:
+### 3. **Edit with Natural Language** (Smart Updates)
+- Type simple commands: "make header darker", "add pricing section"
+- ProductManager analyzes risk and coordinates safe changes
+- Changes apply instantly with live reload
+
+### 4. **Download & Deploy** (One-Click)
+- Click "📥 Download ZIP"
+- Get complete website ready for deployment
+- Single HTML file with embedded CSS/JS
+
+## 🎨 Natural Language Commands
+
+| Command | Effect | Risk Level |
+|---------|--------|------------|
+| `make header darker` | Changes header background color | Low |
+| `add pricing section` | Adds complete pricing section | Medium |
+| `make it look more modern` | Updates design aesthetics | Medium |
+| `remove all images` | Removes image tags and references | High |
+| `change to dark theme` | Switches to dark color scheme | High |
+
+**Smart Risk Management**: ProductManager evaluates each change and applies appropriate safety limits.
+
+## 📊 Performance & Architecture
+
+### Performance Metrics
+| Metric | Performance |
+|--------|-------------|
+| **Initial Generation** | <5 seconds |
+| **Live Updates** | <1 second |
+| **Risk Assessment** | Real-time |
+| **Agent Communication** | Console logged |
+| **Memory Usage** | Session-based, minimal |
+
+### Architecture Benefits
+- **Clean UI**: No verbose explanations or README-like text
+- **Console Debug**: All technical info in terminal
+- **Smart AI**: ProductManager prevents breaking changes
+- **Fast Feedback**: Instant preview and updates
+- **Single File**: Easy deployment and sharing
+
+## 🔧 Technical Implementation
+
+### AI Model Integration
+```python
+# Primary AI with intelligent fallback
+if LLM_MODEL:
+    # Use OpenAI GPT-4 for intelligent generation
+    refined_specs = ProductManagerAgent.refine_initial_requirements(spec)
+    html_content = CodeAgent.generate_single_file_with_llm(spec, refined_specs)
+else:
+    # Template fallback when no API key
+    html_content = CodeAgent.generate_single_file_template(spec)
 ```
-Make header background blue
-Add footer
-Make text bigger
-Center everything
+
+### Console Logging Pattern
+```python
+def log_agent_communication(source, target, message, details=None):
+    """Log agent-to-agent communication to console"""
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    print(f"[{timestamp}] {source} → {target}: {message}")
+    if details:
+        print(f"  Details: {details}")
 ```
 
-### 4. **Download & Deploy**
-Get your complete website as a ZIP file - ready for deployment!
-
-## 🏗️ Architecture
-
-### Multi-Agent System (Optimized for Speed)
-- **SpecAgent**: Requirement gathering through structured wizard
-- **CodeAgent**: HTML5/CSS3 scaffolding generation
-- **PreviewAgent**: HTTP server + file watching with auto-reload
-- **FeedbackAgent**: Natural language parsing and CSS/HTML modifications
-- **PackageAgent**: Project packaging and download functionality
-
-### Technical Stack
-- **Frontend**: Streamlit (reactive web interface)
-- **File Monitoring**: Watchdog (cross-platform file watching)
-- **HTTP Server**: Built-in Python server (lightweight preview)
-- **Session Management**: Temporary workspaces with auto-cleanup
-- **Natural Language**: Regex-based command parsing
-
-## 🎨 Example Commands
-
-| Command | Effect |
-|---------|--------|
-| `Make header background red` | Changes header color to red |
-| `Make text bigger` | Increases font sizes across site |
-| `Add footer` | Adds a footer section with copyright |
-| `Center everything` | Centers content alignment |
-| `Make title smaller` | Reduces heading font sizes |
-
-## 📊 Performance Comparison
-
-| Metric | Phase 1 (Advanced) | Phase 2 (Builder) | WebWeaver (Studio) |
-|--------|-------------------|-------------------|-------------------|
-| **Setup Time** | ~5 minutes | ~3 minutes | ~30 seconds |
-| **Dependencies** | 15+ packages | 10+ packages | 2 packages |
-| **API Keys** | Required (Gemini) | Required (OpenAI) | None needed |
-| **Generation Speed** | 30+ seconds | 15+ seconds | <5 seconds |
-| **Learning Curve** | Advanced | Intermediate | Beginner |
-| **Use Case** | Full development | Website building | Live web dev |
+### Risk Management
+```python
+# Smart risk thresholds (fixed from overly conservative)
+max_change_ratio = {
+    'low': 0.95,     # Allow 95% changes for low risk
+    'medium': 0.85,  # Allow 85% changes for medium risk  
+    'high': 0.60     # Allow 60% changes for high risk
+}
+```
 
 ## 📁 Project Structure
 
 ```
-webweaver_live_studio/
-├── app.py              # Main Streamlit application (704 lines)
+phase3_live_web_studio/
+├── app.py              # Main application (1400+ lines)
+│   ├── SpecAgent           # Clean requirement wizard
+│   ├── ProductManagerAgent # NEW: Coordinate safe changes
+│   ├── CodeAgent           # AI-powered HTML/CSS generation
+│   ├── PreviewAgent        # Live server with auto-reload
+│   ├── FeedbackAgent       # Natural language processing
+│   └── PackageAgent        # ZIP download functionality
 ├── requirements.txt    # Minimal dependencies
-├── run.py             # Easy launch script
-├── demo.py            # Standalone agent testing
-├── README.md          # This file
-├── QUICKSTART.md      # 2-minute setup guide
-└── PROJECT_SUMMARY.md # Complete requirements checklist
+├── .env.example       # API key configuration template
+└── README.md          # This file
 ```
 
-## ✅ Requirements Met (100%)
+## ✅ Quality Improvements
 
-### Core Functionality
-- ✅ Single-page Streamlit app with sidebar + iframe
-- ✅ Temporary workspace per session
-- ✅ Pure Python orchestration (no external frameworks)
-- ✅ Exact wizard questions as specified
-- ✅ JSON spec object with summary display
+### Recent Enhancements
+- ✅ **Clean UI**: Removed all verbose explanations and README-like text
+- ✅ **Console Logging**: Moved all debug info to terminal (like "OpenAI key loaded")
+- ✅ **Smart Risk Management**: Added ProductManagerAgent for safe change coordination
+- ✅ **Fixed Thresholds**: Corrected overly conservative risk limits (85% vs 60%)
+- ✅ **Single File Architecture**: Complete websites in one HTML file
+- ✅ **Better Agent Communication**: Clear workflow and coordination
 
-### Agent Implementation
-- ✅ CodeAgent generates valid HTML5/CSS3 files
-- ✅ PreviewAgent with auto-reload using watchdog
-- ✅ FeedbackAgent with natural language parsing
-- ✅ PackageAgent with ZIP download functionality
+### Architecture Evolution
+1. **Clean Interface**: No overwhelming technical details in UI
+2. **Console Debug**: All agent communications in terminal
+3. **ProductManager Pattern**: Central coordination for safe changes
+4. **Risk-Based Updates**: Smart limits prevent breaking changes
+5. **Single File Output**: Easy deployment and sharing
 
-### Performance & Quality
-- ✅ Auto-reload on every file change
-- ✅ Handles 5+ style tweaks without breaking
-- ✅ <5 second scaffolding generation
-- ✅ Session management with cleanup
+## 🧪 Testing & Validation
 
-## 🧪 Testing
+### Automated Validation
+- **HTML Validation**: Ensures all generated code is valid
+- **Change Ratio Monitoring**: Prevents excessive modifications
+- **Risk Assessment**: Evaluates every change for safety
+- **Agent Communication**: Logs all interactions for debugging
 
-### Automated Testing
+### Manual Testing
 ```bash
-python demo.py
+# Watch console for agent communications
+streamlit run app.py
+
+# Test natural language commands
+"make header darker"          # Should apply safely
+"remove all img tags"         # Should work (fixed thresholds)
+"add pricing section"         # Should create new section
 ```
-This validates all agents independently and confirms:
-- File generation works correctly
-- Feedback parsing applies changes
-- ZIP packaging creates valid archives
 
-### Manual Testing Checklist
-- [ ] Wizard collects all specifications
-- [ ] "Start Development" generates files
-- [ ] Live preview loads and displays correctly
-- [ ] Natural language commands modify styles
-- [ ] ZIP download contains all files
-- [ ] Session cleanup works properly
+## 🔧 Development & Debugging
 
-## 🔧 Development Philosophy
+### Console Monitoring
+Watch the terminal where you ran `streamlit run app.py` to see:
+- Agent-to-agent communications with timestamps
+- LLM prompt previews and response lengths
+- Risk assessments and change ratios
+- Error messages and warnings
 
-### Phase 3 Design Principles
-1. **Real-Time Over Batch**: Instant feedback and live updates
-2. **Simplicity Over Complexity**: Choose straightforward solutions
-3. **Speed Over Sophistication**: Optimize for immediate results
-4. **Accessibility Over Power**: Make it easy for anyone to use
-5. **Reliability Over Features**: Ensure core functionality always works
-
-### Key Improvements from Previous Phases
-- **Removed External Dependencies**: No API keys or internet required
-- **Optimized Agent Architecture**: 5 focused agents vs 10+ complex ones
-- **Real-Time Feedback Loop**: Instant preview vs multi-step workflows
-- **Self-Contained**: All functionality built into the tool
-- **Live Development**: File watching and auto-reload capabilities
+### Key Debug Info
+```bash
+[14:23:45] SpecAgent → ProductManager: Sending user specifications
+[14:23:47] ProductManager → CodeAgent: Sending refined specifications
+[14:23:49] CodeAgent → LLM: Generating HTML with specifications
+[14:23:52] FeedbackAgent → ProductManager: Requesting feedback analysis
+[14:23:54] ProductManager → FeedbackAgent: Analysis complete
+```
 
 ## 🔮 Future Enhancements
 
 ### Immediate Opportunities
-- [ ] More natural language commands
-- [ ] Additional section templates
-- [ ] CSS animation support
-- [ ] Image upload and optimization
-- [ ] Multi-page website support
+- **Enhanced Templates**: More sophisticated fallback options
+- **Additional AI Models**: Support for Claude, Gemini, etc.
+- **Advanced Risk Management**: More granular change controls
+- **Cloud Integration**: Direct deployment to hosting platforms
 
-### Advanced Features
-- [ ] Component library integration
-- [ ] Version control for edits
-- [ ] Direct deployment to hosting platforms
-- [ ] Collaborative multi-user editing
-- [ ] AI-powered design suggestions
-
-### Research Directions
-- [ ] Hybrid approach combining all phase strengths
-- [ ] Machine learning for design optimization
-- [ ] Voice-based editing commands
-- [ ] Advanced natural language understanding
-
-## 🎓 Educational Value
-
-This project demonstrates:
-- **Real-time web development** with live preview capabilities
-- **Multi-agent system optimization** for speed and efficiency
-- **Natural language interface design** for technical tasks
-- **Session management** and temporary workspace handling
-- **Progressive simplification** in AI tool development
-
-## 🏆 Success Metrics
-
-- ✅ **Real-time development**: Live preview with <1 second updates
-- ✅ **Natural language interface**: Intuitive command processing
-- ✅ **Zero setup friction**: No API keys, minimal dependencies
-- ✅ **Production ready**: Fully functional MVP
-- ✅ **User friendly**: Accessible to all skill levels
-- ✅ **Performance optimized**: Fast and responsive
-- ✅ **Extensible architecture**: Clean, modular design
-
-## 📚 Related Projects
-
-- **Phase 1**: [`../phase1_multiagent_django_streamlit/`](../phase1_multiagent_django_streamlit/) - Advanced LLM-based system
-- **Phase 2**: [`../phase2_multiagent_website_builder/`](../phase2_multiagent_website_builder/) - Multi-agent website builder
-
-## 🌟 What Makes Phase 3 Special
-
-### Live Development Experience
-- **Instant Feedback**: See changes immediately as you make them
-- **Natural Language**: Talk to your website in plain English
-- **Zero Configuration**: Start building websites in 30 seconds
-- **Real-Time Preview**: Auto-reload on every file change
-
-### Optimized for Everyone
-- **Beginners**: Simple wizard interface and natural language commands
-- **Developers**: Clean code output and extensible architecture
-- **Designers**: Visual feedback and instant style adjustments
-- **Educators**: Perfect for teaching web development concepts
-
-## 📄 License
-
-MIT License © 2024 **SWE599 Project**
+### Long-term Vision
+- **Team Collaboration**: Multi-user editing capabilities
+- **Version Control**: Track and revert changes
+- **Advanced Styling**: More sophisticated design systems
+- **Framework Support**: React, Vue.js generation
 
 ---
 
-**Ready to build websites with the power of live development?** Just run `python run.py` and start creating! 🎨 ✨ 
+## 📚 Comparison with Previous Phases
+
+| Feature | Phase 1 | Phase 2 | Phase 3 (Current) |
+|---------|---------|---------|-------------------|
+| **Interface** | Complex | Intermediate | Clean & Minimal |
+| **Debug Info** | In UI | In UI | Console Only |
+| **Agents** | 10+ complex | 6+ specialized | 6 coordinated |
+| **Risk Management** | None | Basic | ProductManager |
+| **Setup Time** | 5+ minutes | 3+ minutes | 30 seconds |
+| **Learning Curve** | Advanced | Intermediate | Beginner |
+
+**Phase 3 is the production-ready implementation** with the best balance of functionality, simplicity, and reliability. 
