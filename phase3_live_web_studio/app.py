@@ -7,12 +7,7 @@ import zipfile
 import threading
 import time
 import re
-import subprocess
-import socket
-import requests
 from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 import webbrowser
 
 # LLM imports for multiagent AI system
@@ -105,70 +100,6 @@ def log_agent_communication(source, target, message, details=None):
     # Keep only last 10 entries
     if len(st.session_state.agent_log) > 10:
         st.session_state.agent_log.pop(0)
-
-class FileChangeHandler(FileSystemEventHandler):
-    """Handle file system events for auto-reload"""
-    def __init__(self, callback):
-        self.callback = callback
-        
-    def on_modified(self, event):
-        if not event.is_directory and (event.src_path.endswith('.html') or event.src_path.endswith('.css')):
-            self.callback()
-
-class PreviewAgent:
-    """Manages live preview server and auto-reload"""
-    def __init__(self, workspace_path):
-        self.workspace_path = workspace_path
-        self.server_port = self.find_free_port()
-        self.server_process = None
-        self.observer = None
-        self.reload_trigger = 0
-        
-    def find_free_port(self):
-        """Find an available port for the HTTP server"""
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
-            s.listen(1)
-            port = s.getsockname()[1]
-        return port
-    
-    def start_server(self):
-        """Start HTTP server in workspace directory"""
-        if self.server_process is None:
-            try:
-                self.server_process = subprocess.Popen(
-                    ['python', '-m', 'http.server', str(self.server_port)],
-                    cwd=self.workspace_path,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-                time.sleep(1)  # Give server time to start
-            except Exception as e:
-                st.error(f"Failed to start server: {e}")
-    
-    def start_file_watcher(self):
-        """Start watching for file changes"""
-        if self.observer is None:
-            event_handler = FileChangeHandler(self.trigger_reload)
-            self.observer = Observer()
-            self.observer.schedule(event_handler, self.workspace_path, recursive=True)
-            self.observer.start()
-    
-    def trigger_reload(self):
-        """Trigger iframe reload by incrementing counter"""
-        self.reload_trigger += 1
-        if 'reload_trigger' in st.session_state:
-            st.session_state.reload_trigger = self.reload_trigger
-    
-    def stop(self):
-        """Stop server and file watcher"""
-        if self.server_process:
-            self.server_process.terminate()
-            self.server_process = None
-        if self.observer:
-            self.observer.stop()
-            self.observer.join()
-            self.observer = None
 
 class SpecAgent:
     """Enhanced requirement gathering for truly custom websites"""
@@ -1534,7 +1465,6 @@ def initialize_session():
     if 'workspace_path' not in st.session_state:
         # Create unique workspace for this session
         st.session_state.workspace_path = tempfile.mkdtemp(prefix='webweaver_')
-        st.session_state.preview_agent = None
         st.session_state.development_started = False
         st.session_state.reload_trigger = 0
     if 'feedback_history' not in st.session_state:
@@ -1632,13 +1562,6 @@ def main():
                 success, message = HTMLAgent.generate_website(spec, st.session_state.workspace_path)
                 
                 if success:
-                    # Start preview
-                    if st.session_state.preview_agent:
-                        st.session_state.preview_agent.stop()
-                    
-                    st.session_state.preview_agent = PreviewAgent(st.session_state.workspace_path)
-                    st.session_state.preview_agent.start_server()
-                    st.session_state.preview_agent.start_file_watcher()
                     st.session_state.development_started = True
                     
                     st.rerun()
@@ -1662,25 +1585,28 @@ def main():
                     )
     
     # Main content area
-    if st.session_state.development_started and st.session_state.preview_agent:
+    if st.session_state.development_started:
         col1, col2 = st.columns([3, 1])
         
         with col1:
             st.subheader("🔍 Live Preview")
             
-            # Live preview iframe
-            preview_url = f"http://localhost:{st.session_state.preview_agent.server_port}"
+            # Direct HTML content preview (deployment-compatible)
+            html_path = os.path.join(st.session_state.workspace_path, 'index.html')
             
-            # Use a unique key based on reload trigger to force refresh
-            iframe_html = f"""
-            <iframe 
-                src="{preview_url}?t={st.session_state.reload_trigger}" 
-                width="100%" 
-                height="600" 
-                style="border: 1px solid #ddd; border-radius: 8px;"
-            ></iframe>
-            """
-            st.components.v1.html(iframe_html, height=600)
+            if os.path.exists(html_path):
+                try:
+                    with open(html_path, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                    
+                    # Display HTML content directly in Streamlit
+                    st.components.v1.html(html_content, height=600, scrolling=True)
+                except Exception as e:
+                    st.error(f"Error loading preview: {e}")
+                    st.info("Please try regenerating the website.")
+            else:
+                st.warning("🔄 Preview not available yet. Please generate a website first.")
+                st.info("Click '🚀 Start Development' to create your website.")
         
         with col2:
             st.subheader("🎨 Multi-Agent System")
